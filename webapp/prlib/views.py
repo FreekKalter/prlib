@@ -15,7 +15,7 @@ def root():
                  'size': m.size,
                  'rating': m.rating}
         serialize.append(movie)
-    movies_json = 'var movies = ' + json.dumps(serialize)
+    movies_json = 'var movies = ' + json.dumps(serialize) + ';'
     return render_template('index.html', movies_json=Markup(movies_json))
 
 
