@@ -83,9 +83,8 @@ const Example = React.createClass({
         formatter: RatingFormatter,
       }
     ];
-    let originalRows = movies;
-    let rows = originalRows.slice(0);
-    return {originalRows, rows, filters: {}};
+    let rows = movies;
+    return {rows, filters: {}};
   },
 
   getRows(){
@@ -129,13 +128,13 @@ const Example = React.createClass({
 
   handleGridSort(sortColumn, sortDirection) {
     const comparer = (a, b) => {
-     if (sortDirection === 'ASC') {
+     if (sortDirection === 'ASC' || sortDirection ==='NONE') {
        return (a[sortColumn] > b[sortColumn]) ? 1 : -1;
      } else if (sortDirection === 'DESC') {
        return (a[sortColumn] < b[sortColumn]) ? 1 : -1;
      }
     };
-    const rows = sortDirection === 'NONE' ? this.state.originalRows.slice(0) : this.getRows().sort(comparer);
+    const rows = this.getRows().sort(comparer);
     this.setState({ rows });
   },
 

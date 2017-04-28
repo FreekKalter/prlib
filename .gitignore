@@ -28,6 +28,5 @@ instance/
 .webassets-cache
 
 # frontend
-
 node_modules/
 dist/
