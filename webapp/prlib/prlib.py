@@ -1,47 +1,36 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from .declarative import Base, Movie, File
+from .declarative import Base, Movie, File, create
+from . import app
 
 import os
 import re
-import json
+from datetime import datetime
 
 
 movie_regex = re.compile('.*\.(mp4|avi|mpeg|mpg|wmv|mkv|m4v|flv|divx)$')
-engine = create_engine('sqlite:///movie.db')
+engine = create_engine('sqlite:///' + app.config['DB_FILE'])
 
 Base.metadata.bind = engine
-DBSession = sessionmaker(bind=engine)
-session = DBSession()
-
-
-def write():
-    new_movie = Movie(name='Anal', rating=100)
-    session.add(new_movie)
-    session.commit()
-
-    new_file = File(location='/data/bad/anal/a.mp4', movie=new_movie)
-    session.add(new_file)
-    session.commit()
+Session = sessionmaker(bind=engine)
 
 
 def all_movies():
+    session = Session()
     movies = session.query(Movie).all()
+    session.close()
     return movies
 
 
-def read():
-    movies = session.query(Movie).all()
-    for m in movies:
-        files = session.query(File).filter(File.movie == m).all()
-        if len(files) > 1:
-            for f in files:
-                print(f.location, f.size)
+def create_db():
+    create()
 
 
 def add_to_db():
+    session = Session()
     source_path = '/data/bad'
-    dirs = [(os.path.join(source_path, d), d) for d in os.listdir(source_path)]
+    # TODO: REMOVE THE 100 LIMIT!!!!!
+    dirs = [(os.path.join(source_path, d), d) for d in os.listdir(source_path)][:100]
     for d, name in dirs:
         movie_files = []
         for root, dirs, files in os.walk(d):
@@ -53,7 +42,10 @@ def add_to_db():
             continue
         print(name, '\t', len(movie_files))
         print('\t', movie_files)
-        new_movie = Movie(name=name, size=sum([mf[1] for mf in movie_files]))
+        new_movie = Movie(name=name,
+                          location=d,
+                          added=datetime.now(),
+                          size=sum([mf[1] for mf in movie_files]))
         session.add(new_movie)
         session.commit()
 
@@ -61,3 +53,4 @@ def add_to_db():
             new_file = File(location=f[0], movie=new_movie, size=f[1])
             session.add(new_file)
             session.commit()
+    session.close()
