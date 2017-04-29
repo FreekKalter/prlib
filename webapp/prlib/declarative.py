@@ -1,11 +1,21 @@
 #!/usr/bin/env python3
 
-from sqlalchemy import Column, ForeignKey, Integer, String, CheckConstraint
+from sqlalchemy import Column, ForeignKey, Integer, String, CheckConstraint, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
+from . import app
 
 Base = declarative_base()
+
+
+class Serie(Base):
+    __tablename__ = 'series'
+    id          = Column(Integer, primary_key=True)
+    name        = Column(String(250), nullable=False)
+    tags        = Column(String(500), nullable=True)
+    rating      = Column('rating', Integer, CheckConstraint('rating>0'), CheckConstraint('rating<101'), nullable=True)
+    comment     = Column(String(1500), nullable=True)
 
 
 class Movie(Base):
@@ -13,6 +23,8 @@ class Movie(Base):
     id          = Column(Integer, primary_key=True)
     name        = Column(String(250))
     size        = Column(Integer, nullable=True)
+    location    = Column(String(500), nullable=False)
+    added       = Column(DateTime, nullable=False)
     tags        = Column(String(500), nullable=True)
     comment     = Column(String(1500), nullable=True)
     rating      = Column('rating', Integer, CheckConstraint('rating>0'), CheckConstraint('rating<101'), nullable=True)
@@ -28,5 +40,6 @@ class File(Base):
     movie       = relationship(Movie)
 
 
-engine = create_engine('sqlite:///movie.db')
-Base.metadata.create_all(engine)
+def create():
+    engine = create_engine('sqlite:///' + app.config['DB_FILE'])
+    Base.metadata.create_all(engine)
