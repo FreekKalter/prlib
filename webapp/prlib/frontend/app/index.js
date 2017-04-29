@@ -93,7 +93,7 @@ const Example = React.createClass({
       {
         key: 'size',
         name: 'Size',
-        width: 100,
+        width: 150,
         sortable: true,
         resizable: true,
         filterable: true,

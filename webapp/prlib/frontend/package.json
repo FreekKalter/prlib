@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "webpack"
+    "build": "webpack",
+    "production": "webpack --config webpack.prod.js"
   },
   "author": "Freek Kalter",
   "license": "BSD-3-Clause",
