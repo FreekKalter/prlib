@@ -11,13 +11,19 @@ def root():
     for m in movies:
         if not m.rating:
             m.rating = 0
-        movie = {'id': m.id,
-                 'name': m.name,
-                 'size': m.size,
-                 'rating': m.rating}
-        serialize.append(movie)
+        serialize.append(serialize_movie(m))
     movies_json = 'var movies = ' + json.dumps(serialize) + ';'
     return render_template('index.html', movies_json=Markup(movies_json))
+
+
+def serialize_movie(m):
+    movie = {'id': m.id,
+             'name': m.name,
+             'location': m.location,
+             'size': m.size,
+             'added': m.added.timestamp(),
+             'rating': m.rating}
+    return movie
 
 
 @app.route("/config")
@@ -41,15 +47,3 @@ def init_db():
 def scan_dir():
     prlib.add_to_db()
     return 'Added new files to db'
-
-
-@app.route("/all_movies")
-def all_movies():
-    movies = prlib.all_movies()
-    serialize = []
-    for m in movies:
-        movie = {'name': m.name,
-                 'size': m.size,
-                 'rating': m.rating}
-        serialize.append(movie)
-    return json.dumps(serialize)
