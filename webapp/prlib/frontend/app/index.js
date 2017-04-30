@@ -86,6 +86,7 @@ const Example = React.createClass({
         key: 'name',
         name: 'Name',
         width: 500,
+        editable: true,
         resizable: true,
         sortable: true,
         filterable: true
@@ -148,6 +149,9 @@ const Example = React.createClass({
     for (let i = fromRow; i <= toRow; i++) {
       let rowToUpdate = rows[i];
       let updatedRow = update(rowToUpdate, {$merge: updated});
+      fetch('/movie/'+updatedRow['id'], { method: 'PUT', body: JSON.stringify(updatedRow)}).then(function(response){
+        console.log(response);
+      });
       rows[i] = updatedRow;
     }
     this.setState({ rows });

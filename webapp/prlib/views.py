@@ -59,18 +59,24 @@ def reinit_db():
     return 'Reinitialized a new db'
 
 
+@app.route("/details/<id>")
+def details(id):
+    return render_template('details.html')
+
+
 @app.route("/movie/<id>", methods=['GET'])
 def movie_get(id=None):
     try:
         m = prlib.get_movie(id)
     except NoResultFound:
-        return 'nothing bitch'
+        return 'id does not exist', 404
     return json.dumps(serialize_movie(m))
 
 
 @app.route("/movie/<id>", methods=["PUT"])
 def movie_put(id):
-    movie = json.loads(request.form['row'])
+    movie = json.loads(request.data)
+    print(movie)
     movie['added'] = datetime.fromtimestamp(movie['added'])
     prlib.update_movie(id, movie)
-    return 'what'
+    return 'success'
