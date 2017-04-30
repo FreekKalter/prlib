@@ -10,7 +10,7 @@ Base = declarative_base()
 
 
 class Serie(Base):
-    __tablename__ = 'series'
+    __tablename__ = 'serie'
     id          = Column(Integer, primary_key=True)
     name        = Column(String(250), nullable=False)
     tags        = Column(String(500), nullable=True)
@@ -29,6 +29,8 @@ class Movie(Base):
     comment     = Column(String(1500), nullable=True)
     rating      = Column('rating', Integer, CheckConstraint('rating>0'), CheckConstraint('rating<101'), nullable=True)
     screenshot  = Column(String(500), nullable=True)
+    serie_id    = Column(Integer, ForeignKey('serie.id'))
+    serie       = relationship(Serie)
 
 
 class File(Base):

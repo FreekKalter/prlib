@@ -54,3 +54,17 @@ def add_to_db():
             session.add(new_file)
             session.commit()
     session.close()
+
+
+def get_movie(id):
+    session = Session()
+    return session.query(Movie).filter(Movie.id == id).one()
+
+
+def update_movie(id, movie_dict):
+    session = Session()
+    movie = session.query(Movie).filter(Movie.id == id).one()
+    for key in movie_dict:
+        setattr(movie, key, movie_dict[key])
+    session.add(movie)
+    session.commit()
