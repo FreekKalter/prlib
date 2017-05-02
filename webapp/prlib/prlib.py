@@ -14,6 +14,8 @@ engine = create_engine('sqlite:///' + app.config['DB_FILE'])
 Base.metadata.bind = engine
 Session = sessionmaker(bind=engine)
 
+IDS = [1 ,2, 3]
+
 
 def all_movies():
     session = Session()
@@ -30,7 +32,7 @@ def add_to_db():
     session = Session()
     source_path = '/data/bad'
     # TODO: REMOVE THE 100 LIMIT!!!!!
-    dirs = [(os.path.join(source_path, d), d) for d in os.listdir(source_path)][:100]
+    dirs = [(os.path.join(source_path, d), d) for d in os.listdir(source_path)]
     for d, name in dirs:
         movie_files = []
         for root, dirs, files in os.walk(d):

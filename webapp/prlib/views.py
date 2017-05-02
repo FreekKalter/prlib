@@ -1,21 +1,15 @@
-from flask import render_template, Markup, request
+from flask import render_template, request
 from . import app, prlib
 from sqlalchemy.orm.exc import NoResultFound
 import json
 import os
+import random
 from datetime import datetime
 
 
 @app.route("/")
 def root():
-    movies = prlib.all_movies()
-    serialize = []
-    for m in movies:
-        if not m.rating:
-            m.rating = 0
-        serialize.append(serialize_movie(m))
-    movies_json = 'var movies = ' + json.dumps(serialize) + ';'
-    return render_template('index.html', movies_json=Markup(movies_json))
+    return render_template('index.html')
 
 
 def serialize_movie(m):
@@ -26,6 +20,18 @@ def serialize_movie(m):
              'added': m.added.timestamp(),
              'rating': m.rating}
     return movie
+
+
+@app.route("/all_movies")
+def all_movies():
+    movies = prlib.all_movies()
+    serialize = []
+    for m in movies:
+        if not m.rating:
+            m.rating = 0
+        serialize.append(serialize_movie(m))
+    movies_json = json.dumps(serialize)
+    return movies_json
 
 
 @app.route("/config")
@@ -80,3 +86,17 @@ def movie_put(id):
     movie['added'] = datetime.fromtimestamp(movie['added'])
     prlib.update_movie(id, movie)
     return 'success'
+
+
+@app.route("/visible_ids", methods=["POST"])
+def visible_ids():
+    rows = json.loads(request.data)
+    prlib.IDS = [row['id'] for row in rows]
+    print(prlib.IDS)
+    return 'got it'
+
+
+@app.route("/random")
+def random_movie():
+    m = prlib.get_movie(random.choice(prlib.IDS))
+    return m.name
