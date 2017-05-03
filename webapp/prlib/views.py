@@ -67,7 +67,8 @@ def reinit_db():
 
 @app.route("/details/<id>")
 def details(id):
-    return render_template('details.html')
+    print(id)
+    return render_template('index.html')
 
 
 @app.route("/movie/<id>", methods=['GET'])
@@ -88,15 +89,34 @@ def movie_put(id):
     return 'success'
 
 
+@app.route("/movie/<id>", methods=["DELETE"])
+def movie_delete(id):
+    print(id)
+    prlib.delete_movie(id)
+    return json.dumps('status')
+
+
 @app.route("/visible_ids", methods=["POST"])
 def visible_ids():
     rows = json.loads(request.data)
-    prlib.IDS = [row['id'] for row in rows]
-    print(prlib.IDS)
+    prlib.RANDOM_LIST = [row['id'] for row in rows]
     return 'got it'
 
 
 @app.route("/random")
-def random_movie():
-    m = prlib.get_movie(random.choice(prlib.IDS))
-    return m.name
+def random_route():
+    return render_template('index.html')
+
+
+@app.route("/current_random")
+def current_random():
+    dumps = json.dumps(prlib.LAST_RANDOM)
+    print(dumps)
+    return dumps
+
+
+@app.route("/new_random")
+def new_random():
+    m = prlib.get_movie(random.choice(prlib.RANDOM_LIST))
+    prlib.LAST_RANDOM = m.id
+    return json.dumps(m.id)

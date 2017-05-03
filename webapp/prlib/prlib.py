@@ -14,7 +14,8 @@ engine = create_engine('sqlite:///' + app.config['DB_FILE'])
 Base.metadata.bind = engine
 Session = sessionmaker(bind=engine)
 
-IDS = [1 ,2, 3]
+RANDOM_LIST = []
+LAST_RANDOM = 1
 
 
 def all_movies():
@@ -58,9 +59,19 @@ def add_to_db():
     session.close()
 
 
+def delete_movie(id):
+    session = Session()
+    session.query(Movie).filter(Movie.id == id).delete()
+    session.commit()
+    # TODO: delete file on fs
+    session.close()
+
+
 def get_movie(id):
     session = Session()
-    return session.query(Movie).filter(Movie.id == id).one()
+    resp = session.query(Movie).filter(Movie.id == id).one()
+    session.close()
+    return resp
 
 
 def update_movie(id, movie_dict):
@@ -70,3 +81,4 @@ def update_movie(id, movie_dict):
         setattr(movie, key, movie_dict[key])
     session.add(movie)
     session.commit()
+    session.close()
