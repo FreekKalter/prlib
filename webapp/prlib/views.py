@@ -110,13 +110,22 @@ def random_route():
 
 @app.route("/current_random")
 def current_random():
-    dumps = json.dumps(prlib.LAST_RANDOM)
+    if prlib.LAST_RANDOM == -1:
+        return 'no random selected yet this session', 404
+    movie = prlib.get_movie(prlib.LAST_RANDOM)
+    dumps = json.dumps(serialize_movie(movie))
     print(dumps)
     return dumps
 
 
 @app.route("/new_random")
 def new_random():
-    m = prlib.get_movie(random.choice(prlib.RANDOM_LIST))
-    prlib.LAST_RANDOM = m.id
-    return json.dumps(m.id)
+    prlib.LAST_RANDOM = random.choice(prlib.RANDOM_LIST)
+    movie = prlib.get_movie(prlib.LAST_RANDOM)
+    return json.dumps(serialize_movie(movie))
+
+
+@app.route("/delete_last")
+def delete_last():
+    prlib.delete_movie(prlib.LAST_RANDOM)
+    return 'ok'

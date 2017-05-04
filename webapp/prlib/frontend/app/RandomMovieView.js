@@ -7,19 +7,12 @@ class RandomMovieView extends SingleMovieView{
     }
 
     update_current_random(){
-        var id;
         fetch('/current_random').then(function(response){
             response.json().then(function(data){
-                id = data;
-                console.log(id);
-                fetch('/movie/'+id).then(function(response){
-                    response.json().then(function(data){
-                        if(!data.rating){
-                            data.rating = '';
-                        }
-                        this.setState(data);
-                    }.bind(this));
-                }.bind(this));
+                if(!data.rating){
+                    data.rating = '';
+                }
+                this.setState(data);
             }.bind(this));
         }.bind(this));
     }

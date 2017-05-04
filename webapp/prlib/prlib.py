@@ -5,6 +5,7 @@ from . import app
 
 import os
 import re
+import subprocess
 from datetime import datetime
 
 
@@ -14,8 +15,11 @@ engine = create_engine('sqlite:///' + app.config['DB_FILE'])
 Base.metadata.bind = engine
 Session = sessionmaker(bind=engine)
 
-RANDOM_LIST = []
-LAST_RANDOM = 1
+s = Session()
+movies = s.query(Movie).all()
+RANDOM_LIST = [movie.id for movie in movies]
+s.close()
+LAST_RANDOM = -1
 
 
 def all_movies():
@@ -61,9 +65,10 @@ def add_to_db():
 
 def delete_movie(id):
     session = Session()
-    session.query(Movie).filter(Movie.id == id).delete()
+    movie = session.query(Movie).filter(Movie.id == id).one()
+    subprocess.call(['trash-put', movie['location']])
+    s.delete(movie)
     session.commit()
-    # TODO: delete file on fs
     session.close()
 
 

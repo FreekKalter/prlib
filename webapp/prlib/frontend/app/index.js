@@ -12,6 +12,7 @@ import {
 
 ReactDOM.render(
   <Router>
+
     <div>
         <Link to='/'><h1>MovieDB</h1></Link>
         <Link to='/random'>Random</Link>

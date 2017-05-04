@@ -25,6 +25,7 @@ class Movie(Base):
     size        = Column(Integer, nullable=True)
     location    = Column(String(500), nullable=False)
     added       = Column(DateTime, nullable=False)
+    last_played = Column(DateTime, nullable=True)
     tags        = Column(String(500), nullable=True)
     comment     = Column(String(1500), nullable=True)
     rating      = Column('rating', Integer, CheckConstraint('rating>0'), CheckConstraint('rating<101'), nullable=True)
