@@ -88,6 +88,7 @@ def movie_put(id):
     movie = json.loads(request.data)
     print(movie)
     movie['added'] = datetime.fromtimestamp(movie['added'])
+    movie['last_played'] = datetime.fromtimestamp(movie['last_played'])
     prlib.update_movie(id, movie)
     return 'success'
 

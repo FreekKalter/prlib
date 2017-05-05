@@ -12,7 +12,9 @@ class RandomMovieView extends SingleMovieView{
                 if(!data.rating){
                     data.rating = '';
                 }
-                this.setState(data);
+                if (data.id != this.state.id){
+                    this.setState(data);
+                }
             }.bind(this));
         }.bind(this));
     }
