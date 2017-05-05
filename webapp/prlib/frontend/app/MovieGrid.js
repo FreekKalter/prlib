@@ -49,6 +49,7 @@ const IDFormatter = React.createClass({
 });
 
 const EmptyRowsView = React.createClass({
+    //TODO: little more responsive loading view
   render() {
     return (<div>Loading...</div>);
   }
@@ -146,6 +147,10 @@ const MovieGrid = React.createClass({
     this.setState({ rows });
   },
 
+  handleFilterChangeDelay(filter){
+      clearTimeout(this.props.timerId);
+      this.props= { timerId: setTimeout(this.handleFilterChange, 500, filter)};
+  },
 
   handleFilterChange(filter) {
     let newFilters = Object.assign({}, this.state.filters);
@@ -188,7 +193,7 @@ const MovieGrid = React.createClass({
         rowsCount={this.getSize()}
         onGridRowsUpdated={this.handleGridRowsUpdated}
         toolbar={<Toolbar enableFilter={true} children={this.renderButton()} />}
-        onAddFilter={this.handleFilterChange}
+        onAddFilter={this.handleFilterChangeDelay}
         onClearFilters={this.onClearFilters}
         emptyRowsView={EmptyRowsView}
         minHeight={window.innerHeight - 100} />
