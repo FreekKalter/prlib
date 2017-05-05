@@ -3,7 +3,6 @@ from . import app, prlib
 from sqlalchemy.orm.exc import NoResultFound
 import json
 import os
-import random
 from datetime import datetime
 
 
@@ -19,6 +18,10 @@ def serialize_movie(m):
              'size': m.size,
              'added': m.added.timestamp(),
              'rating': m.rating}
+    if m.last_played:
+        movie['last_played'] = m.last_played.timestamp()
+    else:
+        movie['last_played'] = 0
     return movie
 
 
@@ -99,7 +102,7 @@ def movie_delete(id):
 @app.route("/visible_ids", methods=["POST"])
 def visible_ids():
     rows = json.loads(request.data)
-    prlib.RANDOM_LIST = [row['id'] for row in rows]
+    prlib.update_random_list(rows)
     return 'got it'
 
 
@@ -120,8 +123,7 @@ def current_random():
 
 @app.route("/new_random")
 def new_random():
-    prlib.LAST_RANDOM = random.choice(prlib.RANDOM_LIST)
-    movie = prlib.get_movie(prlib.LAST_RANDOM)
+    movie = prlib.pick_random()
     return json.dumps(serialize_movie(movie))
 
 

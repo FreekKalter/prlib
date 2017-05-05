@@ -5,21 +5,58 @@ from . import app
 
 import os
 import re
+import random
 import subprocess
+from pathlib import Path
 from datetime import datetime
 
 
 movie_regex = re.compile('.*\.(mp4|avi|mpeg|mpg|wmv|mkv|m4v|flv|divx)$')
+if not Path(app.config['DB_FILE']).is_file():
+    create()
 engine = create_engine('sqlite:///' + app.config['DB_FILE'])
 
 Base.metadata.bind = engine
-Session = sessionmaker(bind=engine)
+Session = sessionmaker(bind=engine, expire_on_commit=False)
 
 s = Session()
-movies = s.query(Movie).all()
-RANDOM_LIST = [movie.id for movie in movies]
+# TODO: make sure this is always a list of Movie objects
+RANDOM_LIST = s.query(Movie).all()
 s.close()
 LAST_RANDOM = -1
+
+
+def pick_random():
+    global RANDOM_LIST
+    global LAST_RANDOM
+    RANDOM_LIST.sort(key=lambda movie: movie.last_played or datetime.fromtimestamp(0), reverse=True)
+    print('length of ranomd list', len(RANDOM_LIST))
+    # for movie in RANDOM_LIST:
+    #         print('{0: <80}'.format(movie.name), (movie.last_played or datetime.fromtimestamp(0)))
+    total_change = sum(range(len(RANDOM_LIST)))
+    choice = random.randint(0, total_change)
+    print('choice', choice, 'total_change', total_change)
+    counter = 0
+    for i in range(len(RANDOM_LIST)):
+        counter = counter + i
+        if counter >= choice:
+            LAST_RANDOM = RANDOM_LIST[i].id
+            movie = RANDOM_LIST[i]
+            movie.last_played = datetime.now()
+            session = Session()
+            session.add(movie)
+            session.commit()
+            session.close()
+            print(movie.id)
+            return movie
+
+
+def update_random_list(rows):
+    global RANDOM_LIST
+    # TODO: get lots of id in a bunch, but only if it proofs to be to slow
+    RANDOM_LIST = []
+    for row in rows:
+        RANDOM_LIST.append(get_movie(row['id']))
 
 
 def all_movies():
@@ -36,7 +73,6 @@ def create_db():
 def add_to_db():
     session = Session()
     source_path = '/data/bad'
-    # TODO: REMOVE THE 100 LIMIT!!!!!
     dirs = [(os.path.join(source_path, d), d) for d in os.listdir(source_path)]
     for d, name in dirs:
         movie_files = []
