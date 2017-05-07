@@ -20,10 +20,9 @@ Base.metadata.bind = engine
 Session = sessionmaker(bind=engine, expire_on_commit=False)
 
 s = Session()
-# TODO: make sure this is always a list of Movie objects
 RANDOM_LIST = s.query(Movie).all()
 s.close()
-LAST_RANDOM = -1
+LAST_RANDOM = random.choice(RANDOM_LIST).id
 
 
 def pick_random():
@@ -73,7 +72,9 @@ def create_db():
 def add_to_db():
     session = Session()
     source_path = '/data/bad'
-    dirs = [(os.path.join(source_path, d), d) for d in os.listdir(source_path)]
+    dirs = [d for d in os.listdir(source_path) if not d.startswith('.')]
+    dirs = [(os.path.join(source_path, d), d) for d in dirs]
+
     for d, name in dirs:
         movie_files = []
         for root, dirs, files in os.walk(d):
@@ -100,10 +101,14 @@ def add_to_db():
 
 
 def delete_movie(id):
+    for i, movie in enumerate(RANDOM_LIST):
+        if movie.id == id:
+            del[RANDOM_LIST[i]]
+            break
     session = Session()
     movie = session.query(Movie).filter(Movie.id == id).one()
-    subprocess.call(['trash-put', movie['location']])
-    s.delete(movie)
+    subprocess.call(['trash-put', movie.location])
+    session.delete(movie)
     session.commit()
     session.close()
 
