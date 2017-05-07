@@ -6,19 +6,9 @@ const HumanReadableSizeFormatter = require('./formatters/HumanReadableSizeFormat
 const RatingFormatter = require('./formatters/RatingFormatter.js');
 const DateFormatter = require('./formatters/DateFormatter.js');
 const { Toolbar, Filters: { NumericFilter }, Data: { Selectors } } =  require('react-data-grid-addons');
-import { Link } from 'react-router-dom';
+const Modal = require('react-bootstrap/lib/Modal');
+const Button = require('react-bootstrap/lib/Button');
 
-
-const IDFormatter = React.createClass({
-    propTypes:{
-        value: React.PropTypes.number.isRequired
-    },
-
-    render(){
-        var href = "/details/" + this.props.value;
-        return(<Link to={href}>{this.props.value}</Link>)
-    }
-});
 
 const EmptyRowsView = React.createClass({
     //TODO: little more responsive loading view
@@ -34,13 +24,11 @@ const MovieGrid = React.createClass({
         key: 'id',
         name: 'Id',
         width: 50,
-        formatter: IDFormatter
       },
       {
         key: 'name',
         name: 'Name',
         width: 500,
-        editable: true,
         resizable: true,
         sortable: true,
         filterable: true
@@ -58,7 +46,16 @@ const MovieGrid = React.createClass({
       {
         key: 'added',
         name: 'Added on',
-        width: 200,
+        width: 180,
+        resizable: true,
+        sortable: true,
+        filterable: true,
+        formatter: DateFormatter,
+      },
+      {
+        key: 'last_played',
+        name: 'Last played',
+        width: 180,
         resizable: true,
         sortable: true,
         filterable: true,
@@ -77,12 +74,17 @@ const MovieGrid = React.createClass({
       }
     ];
     let rows = [];
-    return {rows, filters: {}};
+    return {rows: rows, filters: {}, selectedModal: {name: "testing"}, showModal: false};
   },
 
   componentDidMount(){
       fetch('/all_movies').then(function(response){
           response.json().then(function(data){
+              for(var i=0; i<data.length; i++){
+                  if(data[i].size < 1){
+                    console.log(data[i]);
+                  }
+              }
               this.setState({rows: data});
           }.bind(this));
       }.bind(this));
@@ -105,18 +107,6 @@ const MovieGrid = React.createClass({
     // all filters removed
     this.setState({filters: {} });
     this.sendVisibleList();
-  },
-
-  handleGridRowsUpdated({ fromRow, toRow, updated }) {
-    let rows = this.state.rows;
-    for (let i = fromRow; i <= toRow; i++) {
-      let rowToUpdate = rows[i];
-      let updatedRow = update(rowToUpdate, {$merge: updated});
-      fetch('/movie/'+updatedRow['id'], { method: 'PUT', body: JSON.stringify(updatedRow)}).then(function(response){
-      });
-      rows[i] = updatedRow;
-    }
-    this.setState({ rows });
   },
 
   handleFilterChangeDelay(filter){
@@ -144,7 +134,7 @@ const MovieGrid = React.createClass({
      }
     };
     const rows = this.getRows().sort(comparer);
-    this.setState({ rows });
+    this.setState({rows: rows});
   },
 
   sendVisibleList(){
@@ -152,23 +142,162 @@ const MovieGrid = React.createClass({
   },
 
   renderButton(){
-    return(<button type="button" className="btn" onClick={() => this.sendVisibleList() }>Send list</button>);
+    return(<button type="button" className="btn" key="send" onClick={() => this.sendVisibleList() }>Send list</button>);
+  },
+
+  handleRowClick(rowIdx, row){
+      if(row){
+          this.setState({selectedModal: row});
+          this.handleShowModal();
+      }
+  },
+
+  handleCloseModal(){
+      this.setState({showModal: false});
+      clearInterval(this.timerId);
+  },
+
+  handleShowModal(){
+      this.setState({showModal: true});
+  },
+
+  handleSave(){
+      fetch('/movie/'+this.state.selectedModal.id,
+            { method: 'PUT', body: JSON.stringify(this.state.selectedModal)}
+      ).then(function(response){
+      });
+      for( let i=0; i< this.state.rows.length; i++ ){
+          if(this.state.rows[i].id == this.state.selectedModal.id ){
+              this.state.rows[i] = this.state.selectedModal;
+          }
+      }
+  },
+
+  handleSaveAndClose(){
+      this.handleSave();
+      this.handleCloseModal();
+  },
+
+  handleChange(event){
+      var edited = {};
+      for (var attr in this.state.selectedModal){
+          edited[attr] = this.state.selectedModal[attr];
+      }
+      edited[event.target.id] = event.target.value;
+      this.setState({selectedModal: edited});
+  },
+
+  handleDelete(){
+      fetch('/movie/'+ this.state.selectedModal.id , {method: 'DELETE'}).then(function(response){
+          response.json().then(function(data){
+              //TODO: error handling
+          }.bind(this))
+      }.bind(this));
+      this.handleCloseModal();
+      var index;
+      for( let i=0; i< this.state.rows.length; i++ ){
+          if(this.state.rows[i].id == this.state.selectedModal.id ){
+              index = i;
+              break;
+          }
+      }
+      this.state.rows.splice(index,1);
+
+  },
+
+  update_current_random(){
+    fetch('/current_random').then(function(response){
+        response.json().then(function(data){
+            if(!data.rating){
+                data.rating = '';
+            }
+            if (data.id != this.state.selectedModal.id){
+                this.setState({selectedModal: data});
+            }
+        }.bind(this));
+    }.bind(this));
+  },
+
+  renderRandomModal(){
+    this.update_current_random();
+    this.handleShowModal();
+    this.timerId = setInterval( () => this.update_current_random(), 2300);
+  },
+
+  renderRandomButton(){
+    return(<button type="button" className="btn" key="random" onClick={() => this.renderRandomModal() }>Random</button>);
   },
 
   render() {
     return  (
-      <ReactDataGrid
-        onGridSort={this.handleGridSort}
-        columns={this._columns}
-        rowGetter={this.rowGetter}
-        enableCellSelect = {true}
-        rowsCount={this.getSize()}
-        onGridRowsUpdated={this.handleGridRowsUpdated}
-        toolbar={<Toolbar enableFilter={true} children={this.renderButton()} />}
-        onAddFilter={this.handleFilterChangeDelay}
-        onClearFilters={this.onClearFilters}
-        emptyRowsView={EmptyRowsView}
-        minHeight={window.innerHeight - 100} />
+      <div>
+        <ReactDataGrid
+          onGridSort={this.handleGridSort}
+          columns={this._columns}
+          rowGetter={this.rowGetter}
+          enableCellSelect = {true}
+          rowsCount={this.getSize()}
+          toolbar={<Toolbar enableFilter={true} children={[this.renderButton(), this.renderRandomButton()]} />}
+          onAddFilter={this.handleFilterChangeDelay}
+          onClearFilters={this.onClearFilters}
+          emptyRowsView={EmptyRowsView}
+          onRowClick={this.handleRowClick}
+          minHeight={window.innerHeight - 100} />
+
+        <Modal bsSize="large" animation={false} show={this.state.showModal} onHide={this.handleCloseModal}>
+          <Modal.Header closeButton>
+            <Modal.Title>Modal heading</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <form className="form-horizontal">
+              <div className="form-group">
+                <label htmlFor="name" className="col-sm-2 control-label">Name</label>
+                <div className="col-sm-7">
+                    <input type="text" className="form-control" id="name" value={this.state.selectedModal.name} onChange={this.handleChange}/>
+                </div>
+              </div>
+              <div className="form-group">
+                <label htmlFor="rating" className="col-sm-2 control-label">Rating</label>
+                <div className="col-sm-2">
+                    <input type="number" className="form-control" id="rating" value={this.state.selectedModal.rating} onChange={this.handleChange}/>
+                </div>
+                <div className="col-sm-5">
+                    <RatingFormatter value={this.state.selectedModal.rating} />
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="col-sm-2 control-label">Size</label>
+                <div className="col-sm-7">
+                    <p className="form-control-static"><HumanReadableSizeFormatter value={this.state.selectedModal.size} /></p>
+                </div>
+              </div>
+              <div className="form-group">
+                <label htmlFor="tags" className="col-sm-2 control-label">Tags</label>
+                <div className="col-sm-7">
+                    <input className="form-control" id="tags" value={this.state.selectedModal.tags} onChange={this.handleChange}/>
+                </div>
+              </div>
+              <div className="form-group">
+                <label htmlFor="comment" className="col-sm-2 control-label">Comment</label>
+                <div className="col-sm-7">
+                    <textarea className="form-control" rows="4" id="comment" value={this.state.selectedModal.comment} onChange={this.handleChange}/>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <div className="col-sm-offset-2 col-sm-7">
+                  <button type="button" onClick={this.handleSave} className="btn btn-default">Save</button>
+                  <button type="button" onClick={this.handleSaveAndClose} className="btn btn-default">Save and close</button>
+                  <button type="button" onClick={this.handleDelete} className="btn btn-danger">Delete</button>
+                </div>
+              </div>
+            </form>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button onClick={this.handleCloseModal}>Close</Button>
+          </Modal.Footer>
+        </Modal>
+      </div>
     );
   }
 });

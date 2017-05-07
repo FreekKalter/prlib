@@ -1,10 +1,6 @@
 const React = require('react');
 
 const HumanReadableSizeFormatter = React.createClass({
-  propTypes: {
-      value: React.PropTypes.number.isRequired
-  },
-
   render() {
     var bytes = this.props.value;
     var si = true;
