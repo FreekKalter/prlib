@@ -14,7 +14,7 @@ class Serie(Base):
     id          = Column(Integer, primary_key=True)
     name        = Column(String(250), nullable=False)
     tags        = Column(String(500), nullable=True)
-    rating      = Column('rating', Integer, CheckConstraint('rating>0'), CheckConstraint('rating<101'), nullable=True)
+    rating      = Column('rating', Integer, CheckConstraint('rating>=0'), CheckConstraint('rating<=100'), nullable=True)
     comment     = Column(String(1500), nullable=True)
 
 
@@ -23,12 +23,12 @@ class Movie(Base):
     id          = Column(Integer, primary_key=True)
     name        = Column(String(250))
     size        = Column(Integer, nullable=True)
-    location    = Column(String(500), nullable=False)
+    location    = Column(String(500), nullable=False, unique=True)
     added       = Column(DateTime, nullable=False)
     last_played = Column(DateTime, nullable=True)
     tags        = Column(String(500), nullable=True)
     comment     = Column(String(1500), nullable=True)
-    rating      = Column('rating', Integer, CheckConstraint('rating>0'), CheckConstraint('rating<101'), nullable=True)
+    rating      = Column('rating', Integer, CheckConstraint('rating>=0'), CheckConstraint('rating<=100'), nullable=True)
     screenshot  = Column(String(500), nullable=True)
     serie_id    = Column(Integer, ForeignKey('serie.id'))
     serie       = relationship(Serie)

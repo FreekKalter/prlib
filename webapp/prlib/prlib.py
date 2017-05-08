@@ -107,10 +107,22 @@ def delete_movie(id):
             break
     session = Session()
     movie = session.query(Movie).filter(Movie.id == id).one()
-    subprocess.call(['trash-put', movie.location])
+    if not app.config['DEBUG']:
+        subprocess.call(['trash-put', movie.location])
     session.delete(movie)
     session.commit()
     session.close()
+
+
+def location_in_db(location):
+    session = Session()
+    try:
+        session.query(Movie).filter(Movie.location == location).one()
+    except NoResultFound:
+        session.close()
+        return False
+    session.close()
+    return True
 
 
 def get_movie(id):
