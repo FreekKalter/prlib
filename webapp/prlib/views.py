@@ -27,6 +27,7 @@ def serialize_movie(m):
 
 @app.route("/all_movies")
 def all_movies():
+    prlib.scan_dir.delay('/data/bad')
     movies = prlib.all_movies()
     serialize = []
     for m in movies:
@@ -55,8 +56,8 @@ def init_db():
 
 
 @app.route("/scan_dir")
-def scan_dir():
-    prlib.add_to_db()
+def scan_dir_view():
+    prlib.scan_dir.delay('/data/bad')
     return 'Added new files to db'
 
 
@@ -64,7 +65,7 @@ def scan_dir():
 def reinit_db():
     os.unlink(app.config['DB_FILE'])
     prlib.create_db()
-    prlib.add_to_db()
+    prlib.scan_dir.delay('/data/bad')
     return 'Reinitialized a new db'
 
 

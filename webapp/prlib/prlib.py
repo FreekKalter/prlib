@@ -1,28 +1,23 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.exc import NoResultFound
 from .declarative import Base, Movie, File, create
-from . import app
+from . import app, celery
 
 import os
 import re
 import random
+import time
 import subprocess
 from pathlib import Path
 from datetime import datetime
 
 
 movie_regex = re.compile('.*\.(mp4|avi|mpeg|mpg|wmv|mkv|m4v|flv|divx)$')
-if not Path(app.config['DB_FILE']).is_file():
-    create()
 engine = create_engine('sqlite:///' + app.config['DB_FILE'])
 
 Base.metadata.bind = engine
 Session = sessionmaker(bind=engine, expire_on_commit=False)
-
-s = Session()
-RANDOM_LIST = s.query(Movie).all()
-s.close()
-LAST_RANDOM = random.choice(RANDOM_LIST).id
 
 
 def pick_random():
@@ -69,13 +64,16 @@ def create_db():
     create()
 
 
-def add_to_db():
+@celery.task()
+def scan_dir(source_path):
     session = Session()
-    source_path = '/data/bad'
     dirs = [d for d in os.listdir(source_path) if not d.startswith('.')]
     dirs = [(os.path.join(source_path, d), d) for d in dirs]
 
+    # add new dir to db
     for d, name in dirs:
+        if location_in_db(d):
+            continue
         movie_files = []
         for root, dirs, files in os.walk(d):
             for f in files:
@@ -84,19 +82,23 @@ def add_to_db():
                     movie_files.append((fn, os.stat(fn).st_size))
         if not movie_files:
             continue
-        print(name, '\t', len(movie_files))
-        print('\t', movie_files)
         new_movie = Movie(name=name,
                           location=d,
                           added=datetime.now(),
                           size=sum([mf[1] for mf in movie_files]))
         session.add(new_movie)
-        session.commit()
 
         for f in movie_files:
             new_file = File(location=f[0], movie=new_movie, size=f[1])
             session.add(new_file)
-            session.commit()
+
+    # remove from db if no longer on filesystem
+    movies = all_movies()
+    for movie in movies:
+        if not Path(movie.location).is_dir():
+            session.delete(movie)
+
+    session.commit()
     session.close()
 
 
@@ -140,3 +142,14 @@ def update_movie(id, movie_dict):
     session.add(movie)
     session.commit()
     session.close()
+
+
+if not Path(app.config['DB_FILE']).is_file():
+    create()
+    scan_dir.delay('/data/bad')
+    time.sleep(10)
+
+s = Session()
+RANDOM_LIST = s.query(Movie).all()
+s.close()
+LAST_RANDOM = random.choice(RANDOM_LIST).id

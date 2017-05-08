@@ -80,11 +80,6 @@ const MovieGrid = React.createClass({
   componentDidMount(){
       fetch('/all_movies').then(function(response){
           response.json().then(function(data){
-              for(var i=0; i<data.length; i++){
-                  if(data[i].size < 1){
-                    console.log(data[i]);
-                  }
-              }
               this.setState({rows: data});
           }.bind(this));
       }.bind(this));
@@ -228,6 +223,11 @@ const MovieGrid = React.createClass({
     return(<button type="button" className="btn" key="random" onClick={() => this.renderRandomModal() }>Random</button>);
   },
 
+  renderRescanButton(){
+    return(<button type="button" className="btn" key="rescan" onClick={
+        () => fetch('/scan_dir').then(function(response){})}>Rescan</button>);
+  },
+
   render() {
     return  (
       <div>
@@ -237,7 +237,7 @@ const MovieGrid = React.createClass({
           rowGetter={this.rowGetter}
           enableCellSelect = {true}
           rowsCount={this.getSize()}
-          toolbar={<Toolbar enableFilter={true} children={[this.renderButton(), this.renderRandomButton()]} />}
+          toolbar={<Toolbar enableFilter={true} children={[this.renderButton(), this.renderRandomButton(), this.renderRescanButton()]} />}
           onAddFilter={this.handleFilterChangeDelay}
           onClearFilters={this.onClearFilters}
           emptyRowsView={EmptyRowsView}
