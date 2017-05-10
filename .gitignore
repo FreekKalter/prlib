@@ -30,3 +30,8 @@ instance/
 # frontend
 node_modules/
 dist/
+
+# images
+
+*.png
+*.gif
