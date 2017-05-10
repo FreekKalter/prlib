@@ -30,6 +30,7 @@ class Movie(Base):
     comment     = Column(String(1500), nullable=True)
     rating      = Column('rating', Integer, CheckConstraint('rating>=0'), CheckConstraint('rating<=100'), nullable=True)
     screenshot  = Column(String(500), nullable=True)
+    thumbnail   = Column(String(500), nullable=True)
     serie_id    = Column(Integer, ForeignKey('serie.id'))
     serie       = relationship(Serie)
 
@@ -39,6 +40,8 @@ class File(Base):
     id          = Column(Integer, primary_key=True)
     location    = Column(String(500), nullable=False)
     size        = Column(Integer, nullable=True)
+    preview     = Column(String(500), nullable=True)
+    thumbnail   = Column(String(500), nullable=True)
     movie_id    = Column(Integer, ForeignKey('movie.id'))
     movie       = relationship(Movie)
 

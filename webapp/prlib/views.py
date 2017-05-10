@@ -4,6 +4,7 @@ from sqlalchemy.orm.exc import NoResultFound
 import json
 import os
 from datetime import datetime
+import subprocess
 
 
 @app.route("/")
@@ -25,9 +26,18 @@ def serialize_movie(m):
     return movie
 
 
+def serialize_file(f):
+    new_file = {'id': f.id,
+                'location': f.location,
+                'size': f.size,
+                'preview': f.preview,
+                'thumbnail': f.thumbnail}
+    return new_file
+
+
 @app.route("/all_movies")
 def all_movies():
-    prlib.scan_dir.delay('/data/bad')
+    # prlib.scan_dir.delay('/data/bad')
     movies = prlib.all_movies()
     serialize = []
     for m in movies:
@@ -101,6 +111,13 @@ def movie_delete(id):
     return json.dumps('status')
 
 
+@app.route("/play/<id>")
+def play(id):
+    movie = prlib.get_movie(id)
+    subprocess.call(['vlc', movie.location])
+    return 'ok'
+
+
 @app.route("/visible_ids", methods=["POST"])
 def visible_ids():
     rows = json.loads(request.data)
@@ -127,6 +144,13 @@ def current_random():
 def new_random():
     movie = prlib.pick_random()
     return json.dumps(serialize_movie(movie))
+
+
+@app.route("/get_files/<id>")
+def get_files(id):
+    files = prlib.get_files_by_movie(id)
+    serialezed = [serialize_file(file) for file in files]
+    return json.dumps(serialezed)
 
 
 @app.route("/delete_last")

@@ -7,6 +7,7 @@ from . import app, celery
 import os
 import re
 import random
+from hashlib import sha256
 import time
 import subprocess
 from pathlib import Path
@@ -60,6 +61,11 @@ def all_movies():
     return movies
 
 
+def get_files_by_movie(id):
+    session = Session()
+    return session.query(File).filter(File.movie_id == id).all()
+
+
 def create_db():
     create()
 
@@ -89,7 +95,13 @@ def scan_dir(source_path):
         session.add(new_movie)
 
         for f in movie_files:
-            new_file = File(location=f[0], movie=new_movie, size=f[1])
+            h = sha256()
+            h.update(f[0].encode())
+            new_file = File(location=f[0],
+                            movie=new_movie,
+                            size=f[1],
+                            preview=h.hexdigest() + '.gif',
+                            thumbnail=h.hexdigest() + '.png')
             session.add(new_file)
 
     # remove from db if no longer on filesystem
@@ -146,10 +158,16 @@ def update_movie(id, movie_dict):
 
 if not Path(app.config['DB_FILE']).is_file():
     create()
-    scan_dir.delay('/data/bad')
-    time.sleep(10)
+    #scan_dir.delay('/data/bad')
+    #time.sleep(5)
 
-s = Session()
-RANDOM_LIST = s.query(Movie).all()
-s.close()
-LAST_RANDOM = random.choice(RANDOM_LIST).id
+RANDOM_LIST = []
+LAST_RANDOM = 1
+
+#s = Session()
+#RANDOM_LIST = s.query(Movie).all()
+#s.close()
+#if len(RANDOM_LIST) > 0:
+    #LAST_RANDOM = random.choice(RANDOM_LIST).id
+#else:
+    #LAST_RANDOM = 3

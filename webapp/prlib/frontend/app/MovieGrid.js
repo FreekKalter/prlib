@@ -17,6 +17,28 @@ const EmptyRowsView = React.createClass({
   }
 });
 
+class IdFormatter extends React.Component{
+    constructor(props){
+        super(props);
+        this.clickHandler = this.clickHandler.bind(this);
+    }
+
+    clickHandler(){
+        fetch('/play/' + this.props.value).then(function(response){});
+    }
+
+    render(){
+        return(
+                <span>
+                    <button type="button" className="btn btn-default btn-sm" onClick={this.clickHandler}>
+                        {this.props.value} <span className="glyphicon glyphicon-play"></span>
+                    </button>
+                </span>
+              );
+    }
+}
+
+
 const MovieGrid = React.createClass({
   getInitialState() {
     this._columns = [
@@ -24,6 +46,7 @@ const MovieGrid = React.createClass({
         key: 'id',
         name: 'Id',
         width: 50,
+        formatter: IdFormatter
       },
       {
         key: 'name',
@@ -142,8 +165,9 @@ const MovieGrid = React.createClass({
 
   handleRowClick(rowIdx, row){
       if(row){
-          this.setState({selectedModal: row});
-          this.handleShowModal();
+          //this.setState({selectedModal: row});
+          //this.handleShowModal();
+          this.props.onRowSelect(rowIdx, row);
       }
   },
 
@@ -235,14 +259,14 @@ const MovieGrid = React.createClass({
           onGridSort={this.handleGridSort}
           columns={this._columns}
           rowGetter={this.rowGetter}
-          enableCellSelect = {true}
           rowsCount={this.getSize()}
           toolbar={<Toolbar enableFilter={true} children={[this.renderButton(), this.renderRandomButton(), this.renderRescanButton()]} />}
           onAddFilter={this.handleFilterChangeDelay}
           onClearFilters={this.onClearFilters}
           emptyRowsView={EmptyRowsView}
           onRowClick={this.handleRowClick}
-          minHeight={window.innerHeight - 100} />
+          minHeight={window.innerHeight - 250}
+          />
 
         <Modal bsSize="large" animation={false} show={this.state.showModal} onHide={this.handleCloseModal}>
           <Modal.Header closeButton>
