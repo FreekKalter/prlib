@@ -13,6 +13,9 @@ const DateFormatter = React.createClass({
     },
 
     render(){
+        if(this.props.value == 0){
+            return(<span>-</span>);
+        }
         var today = new Date();
         var date = new Date(this.props.value * 1000);
         if(today.getFullYear() == date.getFullYear() &&

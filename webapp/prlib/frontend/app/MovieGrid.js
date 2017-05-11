@@ -45,7 +45,7 @@ const MovieGrid = React.createClass({
       {
         key: 'id',
         name: 'Id',
-        width: 50,
+        width: 70,
         formatter: IdFormatter
       },
       {
@@ -85,6 +85,14 @@ const MovieGrid = React.createClass({
         formatter: DateFormatter,
       },
       {
+        key: 'tags',
+        name: 'Tags',
+        width: 200,
+        editale: false,
+        resizable: true,
+        filterable:true,
+      },
+      {
         key: 'rating',
         name: 'Rating',
         width: 200,
@@ -95,17 +103,24 @@ const MovieGrid = React.createClass({
         filterRenderer: NumericFilter,
         formatter: RatingFormatter,
       }
+
+      //TODO: column with number of files belonging to this movie
+      //TODO: column with Series this movie belongs to
     ];
     let rows = [];
     return {rows: rows, filters: {}, selectedModal: {name: "testing"}, showModal: false};
   },
 
-  componentDidMount(){
+  getMovies(){
       fetch('/all_movies').then(function(response){
           response.json().then(function(data){
               this.setState({rows: data});
           }.bind(this));
       }.bind(this));
+  },
+
+  componentDidMount(){
+      this.getMovies();
   },
 
   getRows(){
@@ -247,6 +262,10 @@ const MovieGrid = React.createClass({
     return(<button type="button" className="btn" key="random" onClick={() => this.renderRandomModal() }>Random</button>);
   },
 
+  renderRefreshButton(){
+    return(<button type="button" className="btn btn-default" key="refresh" onClick={() => this.getMovies() }><span className="glyphicon glyphicon-refresh"> Refresh</span></button>);
+  },
+
   renderRescanButton(){
     return(<button type="button" className="btn" key="rescan" onClick={
         () => fetch('/scan_dir').then(function(response){})}>Rescan</button>);
@@ -260,7 +279,7 @@ const MovieGrid = React.createClass({
           columns={this._columns}
           rowGetter={this.rowGetter}
           rowsCount={this.getSize()}
-          toolbar={<Toolbar enableFilter={true} children={[this.renderButton(), this.renderRandomButton(), this.renderRescanButton()]} />}
+          toolbar={<Toolbar enableFilter={true} children={[this.renderButton(), this.renderRandomButton(), this.renderRescanButton(), this.renderRefreshButton()]} />}
           onAddFilter={this.handleFilterChangeDelay}
           onClearFilters={this.onClearFilters}
           emptyRowsView={EmptyRowsView}

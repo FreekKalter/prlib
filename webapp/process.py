@@ -50,6 +50,7 @@ def make_preview(d, size=320, duration=1, nrsamples=8):
             intervals.append(interval * i)
         intervals.append(total_seconds + 30)
 
+        # TODO: USE shlex module to properly split commandline
         create_palette = 'ffmpeg -y -ss {start} -t {duration} -i movie -vf \
 fps=7,scale={size}:-1:flags=lanczos,palettegen palette-{index}.png'
 

@@ -114,6 +114,7 @@ def movie_delete(id):
 @app.route("/play/<id>")
 def play(id):
     movie = prlib.get_movie(id)
+    prlib.update_movie(id, {'last_played': datetime.now()})
     subprocess.call(['vlc', movie.location])
     return 'ok'
 

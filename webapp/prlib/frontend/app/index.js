@@ -1,6 +1,9 @@
 const React = require('react');
 const ReactDOM = require('react-dom');
+const Carousel = require('nuka-carousel');
 const MovieGrid = require('./MovieGrid.js');
+
+
 
 class PreviewWindow extends React.Component {
     constructor(props){
@@ -11,67 +14,62 @@ class PreviewWindow extends React.Component {
         this.RowSelect = this.RowSelect.bind(this);
     }
 
-    componentDidMount(){
-        this.setState({rendered_images: this.render_images()});
-    }
-
     handleMouseOver(event){
-        var images = this.state.images;
-        for(var i =0; i< images.length; i++){
-            if(event.target.src.endsWith(images[i].thumbnail)){
-                images[i].toShow = images[i].preview;
-            }
+        var src = event.target.src.substring(event.target.src.lastIndexOf('/') + 1);
+        var index = this.state.images.map(function(i){return i.thumbnail;}).indexOf(src);
+        if(index >= 0){
+            var images = this.state.images;
+            // Cant asign directly to images[index] or someting in optimaztion gets lost
+            // freaky bug somewhere in transpilin/compiling/building this whole mess
+            var preview = images[index].preview;
+            images[index].toShow = preview;
+            this.setState({images:images});
         }
-        this.setState({images: images});
-        this.setState({rendered_images:this.render_images()});
     }
 
     handleMouseOut(event){
+        var src = event.target.src.substring(event.target.src.lastIndexOf('/') + 1);
+        var index = this.state.images.map(function(i){return i.preview;}).indexOf(src);
         var images = this.state.images;
-        for(var i =0; i< images.length; i++){
-            if(event.target.src.endsWith(images[i].preview)){
-                images[i].toShow = images[i].thumbnail;
-            }
+        if(index >= 0){
+            // Cant asign directly to images[index] or someting in optimaztion gets lost
+            // freaky bug somewhere in transpilin/compiling/building this whole mess
+            var thumbnail = images[index].thumbnail;
+            images[index].toShow = thumbnail;
+            this.setState({images:images});
         }
-        this.setState({images: images});
-        this.setState({rendered_images:this.render_images()});
     }
 
     prependLocation(img){
-        if(img == 'placeholder.png'){
-            return('/static/images/' + img);
-        }
         return('/static/images/previews/' + img);
     }
 
     RowSelect(rowIdx, row){
         fetch('/get_files/' + row.id).then(function(response){
           response.json().then(function(data){
-              //this.setState({thumbnail: data[0].thumbnail, preview: data[0].preview, toShow: this.prependLocation(data[0].thumbnail)});
+              var imagedict = {};
               for(var i=0; i< data.length; i++){
                   data[i].toShow = data[i].thumbnail;
               }
-              this.setState({images: data})
-              this.setState({rendered_images:this.render_images()});
+              this.setState({images: data});
           }.bind(this));
         }.bind(this));
     }
 
-    render_images(){
-        return(this.state.images.map( (image) =>
-                <img height="200px"
-                     key={this.prependLocation(image.thumbnail)}
-                     src={this.prependLocation(image.toShow)}
-                     onMouseOver={this.handleMouseOver}
-                     onMouseOut={this.handleMouseOut}>
-                     </img> ));
-    }
     render(){
         return(
                 <div>
                     <MovieGrid onRowSelect={this.RowSelect}/>
-                    <div id="preview">
-                        {this.state.rendered_images}
+                    <div>
+                            <Carousel slideWidth="320px"
+                                      cellAlign="left"
+                                      cellSpacing={5}
+                                      slidesToShow={4}>
+                                {this.state.images.map((image) =>
+                                    <img key={image.thumbnail} onMouseOver={this.handleMouseOver} onMouseOut={this.handleMouseOut}
+                                         width="320px" height="180px" src={this.prependLocation(image.toShow)}/>
+                                )}
+                            </Carousel>
                     </div>
                 </div>
               );
@@ -79,8 +77,6 @@ class PreviewWindow extends React.Component {
 }
 
 ReactDOM.render(
-    <div>
-        <PreviewWindow />
-    </div>,
+  <PreviewWindow />,
   document.getElementById('container')
 );
