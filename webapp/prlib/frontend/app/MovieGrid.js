@@ -108,7 +108,7 @@ const MovieGrid = React.createClass({
       //TODO: column with Series this movie belongs to
     ];
     let rows = [];
-    return {rows: rows, filters: {}, selectedModal: {name: "testing"}, showModal: false};
+    return {rows: rows, filters: {}, selectedModal: {name: "testing"}, showModal: false, modal_title: ''};
   },
 
   getMovies(){
@@ -180,15 +180,20 @@ const MovieGrid = React.createClass({
 
   handleRowClick(rowIdx, row){
       if(row){
-          //this.setState({selectedModal: row});
+          this.setState({selectedModal: row});
           //this.handleShowModal();
-          this.props.onRowSelect(rowIdx, row);
+          this.props.onRowSelect(rowIdx, row, this.handleShowDetailsModal);
       }
   },
 
   handleCloseModal(){
       this.setState({showModal: false});
       clearInterval(this.timerId);
+  },
+
+  handleShowDetailsModal(){
+      this.setState({modal_title: 'Details'});
+      this.handleShowModal();
   },
 
   handleShowModal(){
@@ -253,6 +258,7 @@ const MovieGrid = React.createClass({
   },
 
   renderRandomModal(){
+    this.setState({modal_title: 'Random'});
     this.update_current_random();
     this.handleShowModal();
     this.timerId = setInterval( () => this.update_current_random(), 2300);
@@ -263,7 +269,7 @@ const MovieGrid = React.createClass({
   },
 
   renderRefreshButton(){
-    return(<button type="button" className="btn btn-default" key="refresh" onClick={() => this.getMovies() }><span className="glyphicon glyphicon-refresh"> Refresh</span></button>);
+    return(<button type="button" className="btn btn-default" key="refresh" onClick={() => this.getMovies() }><span className="glyphicon glyphicon-refresh"></span> Refresh</button>);
   },
 
   renderRescanButton(){
@@ -289,7 +295,7 @@ const MovieGrid = React.createClass({
 
         <Modal bsSize="large" animation={false} show={this.state.showModal} onHide={this.handleCloseModal}>
           <Modal.Header closeButton>
-            <Modal.Title>Modal heading</Modal.Title>
+            <Modal.Title>{this.state.modal_title}</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <form className="form-horizontal">

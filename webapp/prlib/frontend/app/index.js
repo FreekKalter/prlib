@@ -8,10 +8,11 @@ const MovieGrid = require('./MovieGrid.js');
 class PreviewWindow extends React.Component {
     constructor(props){
         super(props);
-        this.state = {images: [{thumbnail: "", preview: "", toShow: "placeholder.png"}]};
+        this.state = {images: [{thumbnail: "", preview: "", toShow: "placeholder.png"}], showModal: {}};
         this.handleMouseOver = this.handleMouseOver.bind(this);
         this.handleMouseOut = this.handleMouseOut.bind(this);
         this.RowSelect = this.RowSelect.bind(this);
+        this.handleOnClick = this.handleOnClick.bind(this);
     }
 
     handleMouseOver(event){
@@ -44,7 +45,8 @@ class PreviewWindow extends React.Component {
         return('/static/images/previews/' + img);
     }
 
-    RowSelect(rowIdx, row){
+    RowSelect(rowIdx, row, modalFunc){
+        this.setState({showModal: modalFunc});
         fetch('/get_files/' + row.id).then(function(response){
           response.json().then(function(data){
               var imagedict = {};
@@ -54,6 +56,10 @@ class PreviewWindow extends React.Component {
               this.setState({images: data});
           }.bind(this));
         }.bind(this));
+    }
+
+    handleOnClick(){
+        this.state.showModal();
     }
 
     render(){
@@ -66,7 +72,7 @@ class PreviewWindow extends React.Component {
                                       cellSpacing={5}
                                       slidesToShow={4}>
                                 {this.state.images.map((image) =>
-                                    <img key={image.thumbnail} onMouseOver={this.handleMouseOver} onMouseOut={this.handleMouseOut}
+                                    <img onClick={this.handleOnClick} key={image.thumbnail} onMouseOver={this.handleMouseOver} onMouseOut={this.handleMouseOut}
                                          width="320px" height="180px" src={this.prependLocation(image.toShow)}/>
                                 )}
                             </Carousel>
