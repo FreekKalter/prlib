@@ -1,5 +1,5 @@
 from flask import render_template, request
-from . import app, prlib
+from . import app, prlib, tasks
 from sqlalchemy.orm.exc import NoResultFound
 import json
 import os
@@ -37,7 +37,6 @@ def serialize_file(f):
 
 @app.route("/all_movies")
 def all_movies():
-    # prlib.scan_dir.delay('/data/bad')
     movies = prlib.all_movies()
     serialize = []
     for m in movies:
@@ -67,7 +66,7 @@ def init_db():
 
 @app.route("/scan_dir")
 def scan_dir_view():
-    prlib.scan_dir.delay('/data/bad')
+    tasks.scan_dir.delay('/data/bad')
     return 'Added new files to db'
 
 
@@ -75,7 +74,7 @@ def scan_dir_view():
 def reinit_db():
     os.unlink(app.config['DB_FILE'])
     prlib.create_db()
-    prlib.scan_dir.delay('/data/bad')
+    tasks.scan_dir.delay('/data/bad')
     return 'Reinitialized a new db'
 
 

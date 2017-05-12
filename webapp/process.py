@@ -3,25 +3,50 @@ import re
 import os
 from hashlib import sha256
 import sys
+import shlex
 import codecs
 from pathlib import Path
 
 movie_regex = re.compile('.*\.(mp4|avi|mpeg|mpg|wmv|mkv|m4v|flv|divx)$')
 
 
-def make_preview(d, size=320, duration=1, nrsamples=8):
+def get_movie_files(d):
     movie_files = []
     for root, dirs, files in os.walk(d):
         for f in files:
             if movie_regex.match(f):
                 fn = os.path.join(root, f)
                 movie_files.append(fn)
+    return movie_files
+
+
+def make_hash(f):
+    h = sha256()
+    h.update(f.encode())
+    return h.hexdigest()
+
+
+def make_thumbnails(d, size=320):
+    movie_files = get_movie_files(d)
+    for movie in movie_files:
+        h = make_hash(movie)
+        png_name = Path('./prlib/static/images/previews/').joinpath(h).with_suffix('.png')
+        if png_name.is_file():
+            print('skipped: ', png_name)
+            continue
+        print(png_name)
+        create_png = 'ffmpeg -y -i "{input}" -ss 30 -ss 30 -vf scale=320:-1 -vframes 1 {output}'
+        # create png
+        c = shlex.split(create_png.format(input=movie, output=png_name))
+        subprocess.call(c, stderr=subprocess.PIPE)
+
+
+def make_previews(d, size=320, duration=1, nrsamples=8):
+    movie_files = get_movie_files(d)
     for movie in movie_files:
         # gif_name = Path(d).joinpath('.' + Path(movie).stem + '-preview.gif')
-        h = sha256()
-        h.update(movie.encode())
-        gif_name = Path('./prlib/static/images/previews/').joinpath(h.hexdigest()).with_suffix('.gif')
-        png_name = gif_name.with_suffix('.png')
+        h = make_hash(movie)
+        gif_name = Path('./prlib/static/images/previews/').joinpath(h).with_suffix('.gif')
 
         if gif_name.is_file():
             print('skipped: ', gif_name)
@@ -50,33 +75,24 @@ def make_preview(d, size=320, duration=1, nrsamples=8):
             intervals.append(interval * i)
         intervals.append(total_seconds + 30)
 
-        # TODO: USE shlex module to properly split commandline
-        create_palette = 'ffmpeg -y -ss {start} -t {duration} -i movie -vf \
+        create_palette = 'ffmpeg -y -ss {start} -t {duration} -i "{input}" -vf \
 fps=7,scale={size}:-1:flags=lanczos,palettegen palette-{index}.png'
 
-        create_gif = 'ffmpeg -y -ss {start} -t {duration} -i movie -i palette-{index}.png -filter_complex \
+        create_gif = 'ffmpeg -y -ss {start} -t {duration} -i "{input}" -i palette-{index}.png -filter_complex \
 fps=7,scale={size}:-1:flags=lanczos[x];[x][1:v]paletteuse output-{index}.gif'
-
-        create_png = 'ffmpeg -y -i input -ss 30 -ss 30 -vf scale=320:-1 -vframes 1 {output}'
 
         outputs = []
         for i in range(len(intervals)):
             outputs.append('output-{}.gif'.format(i))
-            # create png
-            c = create_png.format(output=png_name).split(' ')
-            c[3] = movie
-            subprocess.call(c, stderr=subprocess.PIPE)
-
             # create pallet
-            c = create_palette.format(start=intervals[i], index=i, size=size, duration=duration).split(' ')
-            c[7] = movie
-            subprocess.call(c, stderr=subprocess.PIPE)
+            c = create_palette.format(input=movie, start=intervals[i], index=i, size=size, duration=duration)
+            subprocess.call(shlex.split(c), stderr=subprocess.PIPE)
 
             # create gif
-            c = create_gif.format(start=intervals[i], index=i, size=size, duration=duration).split(' ')
-            c[7] = movie
-            subprocess.call(c, stderr=subprocess.PIPE)
-        subprocess.call(['convert'] + outputs + [gif_name])
+            c = create_gif.format(input=movie, start=intervals[i], index=i, size=size, duration=duration)
+            subprocess.call(shlex.split(c), stderr=subprocess.PIPE)
+        convert_out = subprocess.run(['convert'] + outputs + [gif_name], universal_newlines=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        print(convert_out.stderr, convert_out.stdout)
         sys.stdout.flush()
 
 source_path = '/data/bad'
@@ -84,4 +100,9 @@ dirs = [d for d in os.listdir(source_path) if not d.startswith('.')]
 dirs = [os.path.join(source_path, d) for d in dirs]
 
 for dir in dirs:
-    make_preview(dir, nrsamples=8, duration=1)
+    # make_previews(dir, nrsamples=8, duration=1)
+    make_thumbnails(dir)
+
+for dir in dirs:
+    make_previews(dir, nrsamples=8, duration=1)
+    # make_thumbnails(dir)
