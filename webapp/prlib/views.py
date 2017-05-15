@@ -17,6 +17,7 @@ def serialize_movie(m):
              'name': m.name,
              'location': m.location,
              'size': m.size,
+             'tags': m.tags,
              'added': m.added.timestamp(),
              'rating': m.rating}
     if m.last_played:
@@ -96,9 +97,9 @@ def movie_get(id=None):
 @app.route("/movie/<id>", methods=["PUT"])
 def movie_put(id):
     movie = json.loads(request.data)
-    print(movie)
     movie['added'] = datetime.fromtimestamp(movie['added'])
     movie['last_played'] = datetime.fromtimestamp(movie['last_played'])
+    print(movie)
     prlib.update_movie(id, movie)
     return 'success'
 
@@ -114,7 +115,7 @@ def movie_delete(id):
 def play(id):
     movie = prlib.get_movie(id)
     prlib.update_movie(id, {'last_played': datetime.now()})
-    subprocess.call(['vlc', movie.location])
+    subprocess.Popen(['vlc', movie.location], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     return 'ok'
 
 

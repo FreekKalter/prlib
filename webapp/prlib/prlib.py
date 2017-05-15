@@ -22,10 +22,8 @@ def pick_random():
     global RANDOM_LIST
     global LAST_RANDOM
     RANDOM_LIST.sort(key=lambda movie: movie.last_played or datetime.fromtimestamp(0), reverse=True)
-    print('length of ranomd list', len(RANDOM_LIST))
     total_change = sum(range(len(RANDOM_LIST)))
     choice = random.randint(0, total_change)
-    print('choice', choice, 'total_change', total_change)
     counter = 0
     for i in range(len(RANDOM_LIST)):
         counter = counter + i
@@ -37,7 +35,6 @@ def pick_random():
             session.add(movie)
             session.commit()
             session.close()
-            print(movie.id)
             return movie
 
 
