@@ -129,15 +129,10 @@ class NumericFilter extends React.Component {
       cursor: 'help'
     };
 
-    let tooltipText = 'Input Methods: Range (x-y), Greater Then (>x), Less Then (<y)';
-
     return (
       <div>
         <div style={columnStyle}>
-          <input key={inputKey} type="text" placeholder="e.g. 3,10-15,>20" className="form-control input-sm" onChange={this.handleChange} onKeyPress={this.handleKeyPress}/>
-        </div>
-        <div className="input-sm">
-          <span className="badge" style={badgeStyle} title={tooltipText}>?</span>
+          <input key={inputKey} type="text" placeholder="after: 13/1/2016" className="form-control input-sm" onChange={this.handleChange} onKeyPress={this.handleKeyPress}/>
         </div>
       </div>
     );
