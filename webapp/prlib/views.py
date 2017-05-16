@@ -19,7 +19,8 @@ def serialize_movie(m):
              'size': m.size,
              'tags': m.tags,
              'added': m.added.timestamp(),
-             'rating': m.rating}
+             'rating': m.rating,
+             'nr_files': prlib.get_nr_files_by_movie(m.id)}
     if m.last_played:
         movie['last_played'] = m.last_played.timestamp()
     else:

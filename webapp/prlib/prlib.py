@@ -52,6 +52,10 @@ def all_movies():
     return movies
 
 
+def get_nr_files_by_movie(id):
+    session = Session()
+    return session.query(File).filter(File.movie_id == id).count()
+
 def get_files_by_movie(id):
     session = Session()
     return session.query(File).filter(File.movie_id == id).all()

@@ -69,6 +69,15 @@ const MovieGrid = React.createClass({
         formatter: HumanReadableSizeFormatter
       },
       {
+        key: 'nr_files',
+        name: 'Nr of files',
+        width: 100,
+        sortable: true,
+        resizable: true,
+        filterable: true,
+        filterRenderer: NumericFilter,
+      },
+      {
         key: 'added',
         name: 'Added on',
         width: 180,
