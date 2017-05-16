@@ -1,6 +1,8 @@
 import React from 'react';
 import { shapes } from 'react-data-grid';
 const { ExcelColumn } = shapes;
+var fileSizeParser = require('filesize-parser');
+
 const RuleType = {
   Number: 1,
   Range: 2,
@@ -72,20 +74,20 @@ class NumericFilter extends React.Component {
         if (!list.hasOwnProperty(key)) {
           continue;
         }
-
+        
         let obj = list[key];
         if (obj.indexOf('-') > 0) { // handle dash
-          let begin = parseInt(obj.split('-')[0], 10);
-          let end = parseInt(obj.split('-')[1], 10);
+          let begin = fileSizeParser(obj.split('-')[0]);
+          let end = fileSizeParser(obj.split('-')[1]);
           rules.push({ type: RuleType.Range, begin: begin, end: end });
         } else if (obj.indexOf('>') > -1) { // handle greater then
-          let begin = parseInt(obj.split('>')[1], 10);
+          let begin = fileSizeParser(obj.split('>')[1]);
           rules.push({ type: RuleType.GreaterThen, value: begin });
         } else if (obj.indexOf('<') > -1) { // handle less then
-          let end = parseInt(obj.split('<')[1], 10);
+          let end = fileSizeParser(obj.split('<')[1]);
           rules.push({ type: RuleType.LessThen, value: end });
         } else { // handle normal values
-          let numericValue = parseInt(obj, 10);
+          let numericValue = fileSizeParser(obj);
           rules.push({ type: RuleType.Number, value: numericValue });
         }
       }
