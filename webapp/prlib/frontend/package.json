@@ -10,14 +10,14 @@
   "license": "BSD-3-Clause",
   "description": "",
   "dependencies": {
+    "filesize-parser": "^1.4.1",
     "immutability-helper": "^2.1.2",
     "nuka-carousel": "^2.0.4",
     "react": "^15.5.4",
     "react-bootstrap": "^0.31.0",
     "react-data-grid": "^2.0.31",
     "react-data-grid-addons": "^2.0.33",
-    "react-dom": "^15.5.4",
-    "react-slick": "^0.14.11"
+    "react-dom": "^15.5.4"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",

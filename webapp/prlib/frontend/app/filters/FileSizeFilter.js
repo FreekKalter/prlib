@@ -74,33 +74,35 @@ class NumericFilter extends React.Component {
         if (!list.hasOwnProperty(key)) {
           continue;
         }
-        
+
         let obj = list[key];
-        if (obj.indexOf('-') > 0) { // handle dash
-          let begin = fileSizeParser(obj.split('-')[0]);
-          let end = fileSizeParser(obj.split('-')[1]);
-          rules.push({ type: RuleType.Range, begin: begin, end: end });
-        } else if (obj.indexOf('>') > -1) { // handle greater then
-          let begin = fileSizeParser(obj.split('>')[1]);
-          rules.push({ type: RuleType.GreaterThen, value: begin });
-        } else if (obj.indexOf('<') > -1) { // handle less then
-          let end = fileSizeParser(obj.split('<')[1]);
-          rules.push({ type: RuleType.LessThen, value: end });
-        } else { // handle normal values
-          let numericValue = fileSizeParser(obj);
-          rules.push({ type: RuleType.Number, value: numericValue });
-        }
+        try{
+            if (obj.indexOf('-') > 0) { // handle dash
+              let begin = fileSizeParser(obj.split('-')[0]);
+              let end = fileSizeParser(obj.split('-')[1]);
+              rules.push({ type: RuleType.Range, begin: begin, end: end });
+            } else if (obj.indexOf('>') > -1) { // handle greater then
+              let begin = fileSizeParser(obj.split('>')[1]);
+              rules.push({ type: RuleType.GreaterThen, value: begin });
+            } else if (obj.indexOf('<') > -1) { // handle less then
+              let end = fileSizeParser(obj.split('<')[1]);
+              rules.push({ type: RuleType.LessThen, value: end });
+            } else { // handle normal values
+              let numericValue = fileSizeParser(obj);
+              rules.push({ type: RuleType.Number, value: numericValue });
+            }
+        }catch(e){}
       }
     }
     return rules;
   }
 
   handleKeyPress(e) { // Validate the input
-    let regex = '>|<|-|,|([0-9])';
-    let result = RegExp(regex).test(e.key);
-    if (result === false) {
-      e.preventDefault();
-    }
+    //let regex = '>|<|-|,|([0-9])';
+    //let result = RegExp(regex).test(e.key);
+    //if (result === false) {
+      //e.preventDefault();
+    //}
   }
 
   handleChange(e) {
