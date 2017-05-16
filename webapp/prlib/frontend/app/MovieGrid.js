@@ -9,6 +9,7 @@ const { Toolbar, Filters: { NumericFilter }, Data: { Selectors } } =  require('r
 const Modal = require('react-bootstrap/lib/Modal');
 const Button = require('react-bootstrap/lib/Button');
 const FileSizeFilter = require('./filters/FileSizeFilter.js');
+const DateFilter = require('./filters/DateFilter.js');
 
 
 const EmptyRowsView = React.createClass({
@@ -74,6 +75,7 @@ const MovieGrid = React.createClass({
         resizable: true,
         sortable: true,
         filterable: true,
+        filterRenderer: DateFilter,
         formatter: DateFormatter,
       },
       {
@@ -83,6 +85,7 @@ const MovieGrid = React.createClass({
         resizable: true,
         sortable: true,
         filterable: true,
+        filterRenderer: DateFilter,
         formatter: DateFormatter,
       },
       {
