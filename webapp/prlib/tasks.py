@@ -12,8 +12,10 @@ from sqlalchemy.orm import sessionmaker
 from .declarative import Base, Movie, File
 
 engine = create_engine('sqlite:///' + app.config['DB_FILE'])
+movie_regex = re.compile('.*\.(mp4|avi|mpeg|mpg|wmv|mkv|m4v|flv|divx)$')
 
 Base.metadata.bind = engine
+# TODO: after in-memory cache, no more need for expire_on_commit?
 Session = sessionmaker(bind=engine, expire_on_commit=False)
 
 
@@ -36,7 +38,7 @@ def scan_dir(source_path):
         movie_files = []
         for root, dirs, files in os.walk(d):
             for f in files:
-                if prlib.movie_regex.match(f):
+                if movie_regex.match(f):
                     fn = os.path.join(root, f)
                     movie_files.append((fn, os.stat(fn).st_size))
         if not movie_files:
@@ -72,7 +74,7 @@ def get_movie_files(d):
     movie_files = []
     for root, dirs, files in os.walk(d):
         for f in files:
-            if prlib.movie_regex.match(f):
+            if movie_regex.match(f):
                 fn = os.path.join(root, f)
                 movie_files.append(fn)
     return movie_files
@@ -90,6 +92,7 @@ def make_thumbnail(movie, hash_digest, size=320):
     subprocess.call(c, stderr=subprocess.PIPE)
 
 
+# TODO: use a temp dir for intermediary files
 @celery.task()
 def make_preview(movie, hash_digest, size=320, duration=1, nrsamples=8):
     # gif_name = Path(d).joinpath('.' + Path(movie).stem + '-preview.gif')

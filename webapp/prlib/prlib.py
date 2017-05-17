@@ -4,14 +4,12 @@ from sqlalchemy.orm.exc import NoResultFound
 from .declarative import Base, Movie, File, create
 from . import app
 
-import re
 import random
 import subprocess
 from pathlib import Path
 from datetime import datetime
 
 
-movie_regex = re.compile('.*\.(mp4|avi|mpeg|mpg|wmv|mkv|m4v|flv|divx)$')
 engine = create_engine('sqlite:///' + app.config['DB_FILE'])
 
 Base.metadata.bind = engine
@@ -55,6 +53,7 @@ def all_movies():
 def get_nr_files_by_movie(id):
     session = Session()
     return session.query(File).filter(File.movie_id == id).count()
+
 
 def get_files_by_movie(id):
     session = Session()
