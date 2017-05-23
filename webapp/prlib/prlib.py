@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, joinedload
 from sqlalchemy.orm.exc import NoResultFound
 from .declarative import Base, Movie, File, create
 from . import app
@@ -45,7 +45,7 @@ def update_random_list(rows):
 
 def all_movies():
     session = Session()
-    movies = session.query(Movie).all()
+    movies = session.query(Movie).options(joinedload(Movie.files)).all()
     session.close()
     return movies
 
@@ -57,7 +57,8 @@ def get_nr_files_by_movie(id):
 
 def get_files_by_movie(id):
     session = Session()
-    return session.query(File).filter(File.movie_id == id).all()
+    m = session.query(Movie).options(joinedload(Movie.files)).filter(Movie.id == id).one()
+    return m.files
 
 
 def create_db():
@@ -69,23 +70,15 @@ def delete_movies(ids):
         delete_movie(id)
 
 
-def delete_files(ids):
-    for id in ids:
-        delete_file(id)
-
-
 def delete_file(id):
     session = Session()
     file = session.query(File).filter(File.id == id).one()
+    session.close()
     thumbnail = 'prlib/static/images/previews/' + file.thumbnail
     preview = 'prlib/static/images/previews/' + file.preview
-    if not app.config['DEBUG']:
-        subprocess.call(['trash-put', file.location])
-        subprocess.call(['trash-put', thumbnail])
-        subprocess.call(['trash-put', preview])
-    session.delete(file)
-    session.commit()
-    session.close()
+    subprocess.call(['trash-put', file.location])
+    subprocess.call(['trash-put', thumbnail])
+    subprocess.call(['trash-put', preview])
 
 
 def delete_movie(id):
@@ -94,11 +87,10 @@ def delete_movie(id):
             del[RANDOM_LIST[i]]
             break
     session = Session()
-    movie = session.query(Movie).filter(Movie.id == id).one()
-    files = get_files_by_movie(movie.id)
-    delete_files([file.id for file in files])
-    if not app.config['DEBUG']:
-        subprocess.call(['trash-put', movie.location])
+    movie = session.query(Movie).options(joinedload(Movie.files)).filter(Movie.id == id).one()
+    for id in [f.id for f in movie.files]:
+        delete_file(id)
+    subprocess.call(['trash-put', movie.location])
     session.delete(movie)
     session.commit()
     session.close()
@@ -117,7 +109,7 @@ def location_in_db(location):
 
 def get_movie(id):
     session = Session()
-    resp = session.query(Movie).filter(Movie.id == id).one()
+    resp = session.query(Movie).options(joinedload(Movie.files)).filter(Movie.id == id).one()
     session.close()
     return resp
 

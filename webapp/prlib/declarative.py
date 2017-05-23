@@ -33,6 +33,7 @@ class Movie(Base):
     thumbnail   = Column(String(500), nullable=True)
     serie_id    = Column(Integer, ForeignKey('serie.id'))
     serie       = relationship(Serie)
+    files       = relationship("File", back_populates="movie", cascade="all, delete-orphan")
 
 
 class File(Base):
@@ -43,7 +44,7 @@ class File(Base):
     preview     = Column(String(500), nullable=True)
     thumbnail   = Column(String(500), nullable=True)
     movie_id    = Column(Integer, ForeignKey('movie.id'))
-    movie       = relationship(Movie)
+    movie       = relationship(Movie, back_populates="files")
 
 
 def create():
