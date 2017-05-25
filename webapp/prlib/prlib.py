@@ -19,28 +19,37 @@ Session = sessionmaker(bind=engine, expire_on_commit=False)
 def pick_random():
     global RANDOM_LIST
     global LAST_RANDOM
-    RANDOM_LIST.sort(key=lambda movie: movie.last_played or datetime.fromtimestamp(0), reverse=True)
-    total_change = sum(range(len(RANDOM_LIST)))
+    RANDOM_LIST.sort(key=lambda movie: movie.days, reverse=True)
+    total_change = sum([m.days for m in RANDOM_LIST])
+    if total_change == 0:
+        return random.choice(RANDOM_LIST)
     choice = random.randint(0, total_change)
     counter = 0
-    for i in range(len(RANDOM_LIST)):
-        counter = counter + i
+    for m in RANDOM_LIST:
+        counter = counter + m.days
         if counter >= choice:
-            LAST_RANDOM = RANDOM_LIST[i].id
-            movie = RANDOM_LIST[i]
-            movie.last_played = datetime.now()
+            LAST_RANDOM = m.id
+            m.last_played = datetime.now()
+            m.days = 0
             session = Session()
-            session.add(movie)
+            session.add(m)
             session.commit()
             session.close()
-            return movie
+            return m
 
 
 def update_random_list(rows):
     global RANDOM_LIST
     RANDOM_LIST = []
     for row in rows:
-        RANDOM_LIST.append(get_movie(row['id']))
+        m = get_movie(row['id'])
+        if m.last_played:
+            m.days = (datetime.now() - m.last_played).days
+        else:
+            m.days = 365
+        if m.days > 365:
+            m.days = 365
+        RANDOM_LIST.append(m)
 
 
 def all_movies():
