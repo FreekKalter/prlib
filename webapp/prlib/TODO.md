@@ -6,7 +6,7 @@
 
     `WARNING/PoolWorker-1] /home/fkalter/projects/prlib/webapp/myenv/lib/python3.6/site-packages/sqlalchemy/orm/unitofwork.py:251: SAWarning: Object of type <File> not in session, delete operation along 'Movie.files' will not proceed (orm_util.state_class_str(state), operation, prop))`
 
-- Implement random picking differently. Let number of days since last played (capped at ~365), be the change of being played.
+- Show files in details modal
 
 - Setup a way to convert movie.db (and keep data) if something in the db scheme changes (new columns/relationship etc)
 

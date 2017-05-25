@@ -24,13 +24,13 @@ def pick_random():
     if total_change == 0:
         return random.choice(RANDOM_LIST)
     choice = random.randint(0, total_change)
+    print('total_change:', total_change, 'choice: ', choice)
     counter = 0
     for m in RANDOM_LIST:
         counter = counter + m.days
         if counter >= choice:
             LAST_RANDOM = m.id
             m.last_played = datetime.now()
-            m.days = 0
             session = Session()
             session.add(m)
             session.commit()
@@ -43,12 +43,6 @@ def update_random_list(rows):
     RANDOM_LIST = []
     for row in rows:
         m = get_movie(row['id'])
-        if m.last_played:
-            m.days = (datetime.now() - m.last_played).days
-        else:
-            m.days = 365
-        if m.days > 365:
-            m.days = 365
         RANDOM_LIST.append(m)
 
 

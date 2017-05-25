@@ -4,6 +4,7 @@ from sqlalchemy import Column, ForeignKey, Integer, String, CheckConstraint, Dat
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
+from datetime import datetime
 from . import app
 
 Base = declarative_base()
@@ -34,6 +35,15 @@ class Movie(Base):
     serie_id    = Column(Integer, ForeignKey('serie.id'))
     serie       = relationship(Serie)
     files       = relationship("File", back_populates="movie", cascade="all, delete-orphan")
+
+    @property
+    def days(self):
+        days = 365
+        if self.last_played:
+            days = (datetime.now() - self.last_played).days
+        if days > 365:
+            return 365
+        return days
 
 
 class File(Base):
