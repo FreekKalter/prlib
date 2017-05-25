@@ -22,9 +22,10 @@ def pick_random():
     RANDOM_LIST.sort(key=lambda movie: movie.days, reverse=True)
     total_change = sum([m.days for m in RANDOM_LIST])
     if total_change == 0:
-        return random.choice(RANDOM_LIST)
+        choice = random.choice(RANDOM_LIST)
+        LAST_RANDOM = choice.id
+        return choice
     choice = random.randint(0, total_change)
-    print('total_change:', total_change, 'choice: ', choice)
     counter = 0
     for m in RANDOM_LIST:
         counter = counter + m.days
