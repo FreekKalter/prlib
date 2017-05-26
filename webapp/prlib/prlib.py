@@ -41,10 +41,9 @@ def pick_random():
 
 def update_random_list(rows):
     global RANDOM_LIST
-    RANDOM_LIST = []
-    for row in rows:
-        m = get_movie(row['id'])
-        RANDOM_LIST.append(m)
+    movies = all_movies()
+    ids = [row['id'] for row in rows]
+    RANDOM_LIST = [movie for movie in movies if movie.id in ids]
 
 
 def all_movies():
