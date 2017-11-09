@@ -10,6 +10,7 @@
   "license": "BSD-3-Clause",
   "description": "",
   "dependencies": {
+    "classnames": "^2.2.5",
     "filesize-parser": "^1.4.1",
     "immutability-helper": "^2.1.2",
     "nuka-carousel": "^2.0.4",

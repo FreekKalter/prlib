@@ -10,6 +10,7 @@ const Modal = require('react-bootstrap/lib/Modal');
 const Button = require('react-bootstrap/lib/Button');
 const FileSizeFilter = require('./filters/FileSizeFilter.js');
 const DateFilter = require('./filters/DateFilter.js');
+const classNames = require('classnames');
 
 
 const EmptyRowsView = React.createClass({
@@ -30,13 +31,13 @@ class IdFormatter extends React.Component{
     }
 
     render(){
-        return(
-                <span>
-                    <button type="button" className="btn btn-default btn-sm" onClick={this.clickHandler}>
-                        {this.props.value} <span className="glyphicon glyphicon-play"></span>
-                    </button>
-                </span>
-              );
+      return(
+        <span>
+            <button type="button" className="btn btn-default btn-sm" onClick={this.clickHandler}>
+                {this.props.value} <span className="glyphicon glyphicon-play"></span>
+            </button>
+        </span>
+      );
     }
 }
 
@@ -100,7 +101,7 @@ const MovieGrid = React.createClass({
       {
         key: 'tags',
         name: 'Tags',
-        width: 200,
+        width: 190,
         editale: false,
         resizable: true,
         filterable:true,
@@ -117,11 +118,10 @@ const MovieGrid = React.createClass({
         formatter: RatingFormatter,
       }
 
-      //TODO: column with number of files belonging to this movie
       //TODO: column with Series this movie belongs to
     ];
     let rows = [];
-    return {rows: rows, filters: {}, selectedModal: {name: "testing"}, showModal: false, modal_title: ''};
+    return {rows: rows, filters: {}, selectedModal: {name: "testing", files: []}, showModal: false, modal_title: '', tagInput: ''};
   },
 
   getMovies(){
@@ -152,7 +152,7 @@ const MovieGrid = React.createClass({
   onClearFilters() {
     // all filters removed
     this.setState({filters: {} });
-    this.sendVisibleList();
+    setTimeout(this.sendVisibleList, 400);
   },
 
   handleFilterChangeDelay(filter){
@@ -169,6 +169,7 @@ const MovieGrid = React.createClass({
     }
     this.setState({ filters: newFilters });
     this.sendVisibleList();
+
   },
 
   handleGridSort(sortColumn, sortDirection) {
@@ -187,14 +188,9 @@ const MovieGrid = React.createClass({
     fetch('/visible_ids', {method: 'POST', body: JSON.stringify(this.getRows())}).then(function(respons){});
   },
 
-  renderButton(){
-    return(<button type="button" className="btn" key="send" onClick={() => this.sendVisibleList() }>Send list</button>);
-  },
-
   handleRowClick(rowIdx, row){
       if(row){
           this.setState({selectedModal: row});
-          //this.handleShowModal();
           this.props.onRowSelect(rowIdx, row, this.handleShowDetailsModal);
       }
   },
@@ -210,6 +206,7 @@ const MovieGrid = React.createClass({
   },
 
   handleShowModal(){
+      console.log(this.state.selectedModal);
       this.setState({showModal: true});
   },
 
@@ -228,6 +225,7 @@ const MovieGrid = React.createClass({
   handleSaveAndClose(){
       this.handleSave();
       this.handleCloseModal();
+      this.getMovies()
   },
 
   handleChange(event){
@@ -253,21 +251,26 @@ const MovieGrid = React.createClass({
               break;
           }
       }
-      this.state.rows.splice(index,1);
-
+      this.getMovies();
   },
 
   update_current_random(){
     fetch('/current_random').then(function(response){
         response.json().then(function(data){
-            if(!data.rating){
-                data.rating = '';
-            }
             if (data.id != this.state.selectedModal.id){
                 this.setState({selectedModal: data});
             }
         }.bind(this));
     }.bind(this));
+  },
+
+  handleCompress(){
+    fetch('/compress', {method: 'POST', body: JSON.stringify(this.getRows())}).then(function(respons){});
+  },
+
+  handleCompressOne(){
+    fetch('/compress', {method: 'POST', body: JSON.stringify([this.state.selectedModal])}).then(function(respons){});
+    this.handleCloseModal();
   },
 
   renderRandomModal(){
@@ -277,8 +280,23 @@ const MovieGrid = React.createClass({
     this.timerId = setInterval( () => this.update_current_random(), 2300);
   },
 
+  onRowSelect(rows){
+    this.setState({ selectedRows: rows });
+  },
+
+  handleTagRows(){
+    console.log(this.state.tagInput);
+    fetch('/tagmultiple', {method: 'POST', body: JSON.stringify({rows: this.state.selectedRows, tag: this.state.tagInput})}).then(function(respons){});
+    setTimeout(this.getMovies, 400);
+  },
+
+  // Toolbar buttons
+  renderSendListButton(){
+    return(<button type="button" className="btn" key="send" onClick={() => this.sendVisibleList() }><span className="glyphicon glyphicon-transfer"></span> Send list</button>);
+  },
+
   renderRandomButton(){
-    return(<button type="button" className="btn" key="random" onClick={() => this.renderRandomModal() }>Random</button>);
+    return(<button type="button" className="btn" key="random" onClick={() => this.renderRandomModal() }><span className="glyphicon glyphicon-random"></span> Random</button>);
   },
 
   renderRefreshButton(){
@@ -287,7 +305,28 @@ const MovieGrid = React.createClass({
 
   renderRescanButton(){
     return(<button type="button" className="btn" key="rescan" onClick={
-        () => fetch('/scan_dir').then(function(response){})}>Rescan</button>);
+        () => fetch('/scan_dir').then(function(response){})}><span className="glyphicon glyphicon-search"></span> Rescan</button>);
+  },
+
+  renderRepairButton(){
+    return(<button type="button" className="btn" key="repair" onClick={
+        () => fetch('/repair').then(function(response){})}><span className="glyphicon glyphicon-wrench"></span> Repair</button>);
+  },
+
+  renderCompressButton(){
+    return(<button type="button" className="btn btn-default" key="compress" onClick={() => this.handleCompress() }><span className="glyphicon glyphicon-compressed"></span> Compress</button>);
+  },
+
+  renderTagButton(){
+    return(<button type="button" className="btn btn-default" key="tag" onClick={() => this.handleTagRows() }><span className="glyphicon glyphicon-tag"></span> Tag</button>);
+  },
+
+  renderTagInput(){
+    return(<input type="text" value={this.state.tagInput} key="taginput" onChange={this.tagInputChange}/>);
+  },
+
+  tagInputChange(event){
+      this.setState({tagInput: event.target.value});
   },
 
   render() {
@@ -298,12 +337,16 @@ const MovieGrid = React.createClass({
           columns={this._columns}
           rowGetter={this.rowGetter}
           rowsCount={this.getSize()}
-          toolbar={<Toolbar enableFilter={true} children={[this.renderButton(), this.renderRandomButton(), this.renderRescanButton(), this.renderRefreshButton()]} />}
+          toolbar={<Toolbar enableFilter={true} children={[this.renderSendListButton(), this.renderRandomButton(), this.renderRescanButton(), this.renderRepairButton(), this.renderRefreshButton(),
+                                                           this.renderCompressButton(), this.renderTagButton(), this.renderTagInput()]} />}
           onAddFilter={this.handleFilterChangeDelay}
           onClearFilters={this.onClearFilters}
           emptyRowsView={EmptyRowsView}
           onRowClick={this.handleRowClick}
           minHeight={window.innerHeight - 250}
+          enableRowSelect="multi"
+          onRowSelect={this.onRowSelect}
+
           />
 
         <Modal bsSize="large" animation={false} show={this.state.showModal} onHide={this.handleCloseModal}>
@@ -314,35 +357,56 @@ const MovieGrid = React.createClass({
             <form className="form-horizontal">
               <div className="form-group">
                 <label htmlFor="name" className="col-sm-2 control-label">Name</label>
-                <div className="col-sm-7">
+                <div className="col-sm-8">
                     <input type="text" className="form-control" id="name" value={this.state.selectedModal.name} onChange={this.handleChange}/>
                 </div>
               </div>
+
               <div className="form-group">
                 <label htmlFor="rating" className="col-sm-2 control-label">Rating</label>
-                <div className="col-sm-2">
+                <div className="col-sm-3">
                     <input type="number" className="form-control" id="rating" value={this.state.selectedModal.rating} onChange={this.handleChange}/>
                 </div>
                 <div className="col-sm-5">
                     <RatingFormatter value={this.state.selectedModal.rating} />
                 </div>
               </div>
+
               <div className="form-group">
                 <label className="col-sm-2 control-label">Size</label>
-                <div className="col-sm-7">
+                <div className="col-sm-8">
                     <p className="form-control-static"><HumanReadableSizeFormatter value={this.state.selectedModal.size} /></p>
                 </div>
               </div>
+
               <div className="form-group">
                 <label htmlFor="tags" className="col-sm-2 control-label">Tags</label>
-                <div className="col-sm-7">
+                <div className="col-sm-8">
                     <input className="form-control" id="tags" value={this.state.selectedModal.tags} onChange={this.handleChange}/>
                 </div>
               </div>
               <div className="form-group">
                 <label htmlFor="comment" className="col-sm-2 control-label">Comment</label>
-                <div className="col-sm-7">
+                <div className="col-sm-8">
                     <textarea className="form-control" rows="4" id="comment" value={this.state.selectedModal.comment} onChange={this.handleChange}/>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="col-sm-2 control-label">Size</label>
+                <div className="col-sm-6">
+                    <ul className="modalFileList">
+                        {this.state.selectedModal.files.map((item, index) => (
+                            <li key={index}>{item[0]}</li>
+                        ))}
+                    </ul>
+                </div>
+                <div className="col-sm-2">
+                    <ul className={classNames("modalSizeList", "text-right")}>
+                        {this.state.selectedModal.files.map((item, index) => (
+                            <li key={index}><HumanReadableSizeFormatter value={item[1]} /></li>
+                        ))}
+                    </ul>
                 </div>
               </div>
 
@@ -350,6 +414,7 @@ const MovieGrid = React.createClass({
                 <div className="col-sm-offset-2 col-sm-7">
                   <button type="button" onClick={this.handleSave} className="btn btn-default">Save</button>
                   <button type="button" onClick={this.handleSaveAndClose} className="btn btn-default">Save and close</button>
+                  <button type="button" onClick={this.handleCompressOne} className="btn btn-primary">Compress</button>
                   <button type="button" onClick={this.handleDelete} className="btn btn-danger">Delete</button>
                 </div>
               </div>

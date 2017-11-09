@@ -90,9 +90,16 @@ class SingleMOvieView extends React.Component{
               </div>
 
               <div className="form-group">
+                <label htmlFor="files" className="col-sm2 control-label">Files</label>
+                <div className="col-sm-7">
+                    <p className="form-control-static">{this.state.files}</p>
+                </div>
+              </div>
+
+              <div className="form-group">
                 <div className="col-sm-offset-2 col-sm-7">
                   <button type="button" onClick={this.handleSubmit} className="btn btn-default">Save</button>
-                  <button type="button" onClick={this.handleSubmitAndBac} className="btn btn-default">Save and back</button>
+                  <button type="button" onClick={this.handleSubmitAndBack} className="btn btn-default">Save and back</button>
                   <button type="button" onClick={this.handleDelete} className="btn btn-danger">Delete</button>
                 </div>
               </div>

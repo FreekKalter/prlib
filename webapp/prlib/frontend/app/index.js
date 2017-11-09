@@ -8,7 +8,7 @@ const MovieGrid = require('./MovieGrid.js');
 class PreviewWindow extends React.Component {
     constructor(props){
         super(props);
-        this.state = {images: [{thumbnail: "", preview: "", toShow: "placeholder.png"}], showModal: {}};
+        this.state = {images: [{thumbnail: "", preview: "", toShow: "../placeholder.svg"}], showModal: {}};
         this.handleMouseOver = this.handleMouseOver.bind(this);
         this.handleMouseOut = this.handleMouseOut.bind(this);
         this.RowSelect = this.RowSelect.bind(this);
@@ -64,21 +64,21 @@ class PreviewWindow extends React.Component {
 
     render(){
         return(
+            <div>
+                <MovieGrid onRowSelect={this.RowSelect}/>
                 <div>
-                    <MovieGrid onRowSelect={this.RowSelect}/>
-                    <div>
-                            <Carousel slideWidth="320px"
-                                      cellAlign="left"
-                                      cellSpacing={5}
-                                      slidesToShow={4}>
-                                {this.state.images.map((image) =>
-                                    <img onClick={this.handleOnClick} key={image.thumbnail} onMouseOver={this.handleMouseOver} onMouseOut={this.handleMouseOut}
-                                         width="320px" height="180px" src={this.prependLocation(image.toShow)}/>
-                                )}
-                            </Carousel>
-                    </div>
+                    <Carousel slideWidth="320px"
+                              cellAlign="left"
+                              cellSpacing={5}
+                              slidesToShow={4}>
+                        {this.state.images.map((image) =>
+                            <img onClick={this.handleOnClick} key={image.thumbnail} onMouseOver={this.handleMouseOver} onMouseOut={this.handleMouseOut}
+                                 width="320px" height="185px" src={this.prependLocation(image.toShow)}/>
+                        )}
+                    </Carousel>
                 </div>
-              );
+            </div>
+        );
     }
 }
 
