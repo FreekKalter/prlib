@@ -5,6 +5,7 @@ import json
 import os
 from datetime import datetime
 import subprocess
+from pathlib import Path
 
 
 @app.route("/")
@@ -20,7 +21,12 @@ def serialize_movie(m):
              'tags': m.tags,
              'added': m.added.timestamp(),
              'rating': m.rating,
-             'nr_files': len(m.files)}
+             'nr_files': len(m.files),
+             'files': [(Path(file.location).name, file.size) for file in m.files]}
+    if not movie['rating']:
+        movie['rating'] = 0
+    if not movie['tags']:
+        movie['tags'] = ''
     if m.last_played:
         movie['last_played'] = m.last_played.timestamp()
     else:
@@ -42,8 +48,6 @@ def all_movies():
     movies = prlib.all_movies()
     serialize = []
     for m in movies:
-        if not m.rating:
-            m.rating = 0
         serialize.append(serialize_movie(m))
     movies_json = json.dumps(serialize)
     return movies_json
@@ -70,6 +74,12 @@ def init_db():
 def scan_dir_view():
     tasks.scan_dir.delay('/data/bad')
     return 'Added new files to db'
+
+
+@app.route("/repair")
+def repair_view():
+    tasks.repair.delay('/data/bad')
+    return 'Repaired db'
 
 
 @app.route("/reinit_db")
@@ -124,6 +134,20 @@ def play(id):
 def visible_ids():
     rows = json.loads(request.data)
     prlib.update_random_list(rows)
+    return 'ok!'
+
+
+@app.route("/compress", methods=["POST"])
+def compress():
+    rows = json.loads(request.data)
+    prlib.compress(rows)
+    return 'got it'
+
+
+@app.route("/tagmultiple", methods=["POST"])
+def tagmultiple():
+    data = json.loads(request.data)
+    prlib.tag_multiple(data['rows'], data['tag'])
     return 'got it'
 
 
