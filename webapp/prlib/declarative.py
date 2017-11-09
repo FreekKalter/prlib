@@ -45,6 +45,20 @@ class Movie(Base):
             return 365
         return days
 
+    @property
+    def change(self):
+        lp, added = (365, 365)
+        if self.last_played:
+            lp = (datetime.now() - self.last_played).days
+        if self.added:
+            added = (datetime.now() - self.added).days
+        change = lp + added
+        if change > 2 * 365:
+            return 2 * 365
+        else:
+            return change
+    # TODO: __str__ instead of serialize_movie
+
 
 class File(Base):
     __tablename__ = 'file'
