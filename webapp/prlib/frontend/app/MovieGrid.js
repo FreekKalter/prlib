@@ -1,16 +1,20 @@
 const ReactDataGrid = require('react-data-grid');
-const ReactDOM = require('react-dom');
 const React = require('react');
+
 const update = require('immutability-helper');
+const classNames = require('classnames');
+
 const HumanReadableSizeFormatter = require('./formatters/HumanReadableSizeFormatter.js');
 const RatingFormatter = require('./formatters/RatingFormatter.js');
 const DateFormatter = require('./formatters/DateFormatter.js');
-const { Toolbar, Filters: { NumericFilter }, Data: { Selectors } } =  require('react-data-grid-addons');
+
+const { Toolbar, Filters: { NumericFilter, SingleSelectFilter, AutoCompleteFilter}, Data: { Selectors } } =  require('react-data-grid-addons');
 const Modal = require('react-bootstrap/lib/Modal');
 const Button = require('react-bootstrap/lib/Button');
+
 const FileSizeFilter = require('./filters/FileSizeFilter.js');
 const DateFilter = require('./filters/DateFilter.js');
-const classNames = require('classnames');
+import CompressedFilter from './filters/CompressedFilter.js';
 
 
 const EmptyRowsView = React.createClass({
@@ -34,88 +38,117 @@ class IdFormatter extends React.Component{
       return(
         <span>
             <button type="button" className="btn btn-default btn-sm" onClick={this.clickHandler}>
-                {this.props.value} <span className="glyphicon glyphicon-play"></span>
+                {this.props.value} <span style={{color: '#33a6d6'}} className="glyphicon glyphicon-play"></span>
             </button>
         </span>
       );
     }
 }
 
+class CompressedFormatter extends React.Component{
+    constructor(props){
+        super(props);
+    }
+    getStyle(){
+        if(this.props.value == '✔'){
+            return{color: 'green'}
+        }else{
+            return{color: '#f1204c'}
+        }
+    }
+    render(){
+        if(this.props.value == '✔'){
+            return(<span style={this.getStyle()}>✔</span>);
+        }else{
+            return(<span style={this.getStyle()}>✘</span>);
+        }
+    }
+}
 
 const MovieGrid = React.createClass({
   getInitialState() {
     this._columns = [
       {
-        key: 'id',
-        name: 'Id',
-        width: 70,
-        formatter: IdFormatter
+        key             : 'id',
+        name            : 'Id',
+        width           : 70,
+        formatter       : IdFormatter
       },
       {
-        key: 'name',
-        name: 'Name',
-        width: 500,
-        resizable: true,
-        sortable: true,
-        filterable: true
+        key             : 'name',
+        name            : 'Name',
+        width           : 500,
+        resizable       : true,
+        sortable        : true,
+        filterable      : true
       },
       {
-        key: 'size',
-        name: 'Size',
-        width: 150,
-        sortable: true,
-        resizable: true,
-        filterable: true,
-        filterRenderer: FileSizeFilter,
-        formatter: HumanReadableSizeFormatter
+        key             : 'size',
+        name            : 'Size',
+        width           : 150,
+        sortable        : true,
+        resizable       : true,
+        filterable      : true,
+        filterRenderer  : FileSizeFilter,
+        formatter       : HumanReadableSizeFormatter
       },
       {
-        key: 'nr_files',
-        name: 'Nr of files',
-        width: 100,
-        sortable: true,
-        resizable: true,
-        filterable: true,
-        filterRenderer: NumericFilter,
+        key             : 'compressed',
+        name            : <span className="glyphicon glyphicon-compressed"></span>,
+        width           : 100,
+        sortable        : true,
+        resizable       : true,
+        filterable      : true,
+        filterRenderer  : CompressedFilter,
+        formatter       : CompressedFormatter
       },
       {
-        key: 'added',
-        name: 'Added on',
-        width: 180,
-        resizable: true,
-        sortable: true,
-        filterable: true,
-        filterRenderer: DateFilter,
-        formatter: DateFormatter,
+        key             : 'nr_files',
+        name            : 'Nr of files',
+        width           : 100,
+        sortable        : true,
+        resizable       : true,
+        filterable      : true,
+        filterRenderer  : NumericFilter,
       },
       {
-        key: 'last_played',
-        name: 'Last played',
-        width: 180,
-        resizable: true,
-        sortable: true,
-        filterable: true,
-        filterRenderer: DateFilter,
-        formatter: DateFormatter,
+        key             : 'added',
+        name            : 'Added on',
+        width           : 180,
+        resizable       : true,
+        sortable        : true,
+        filterable      : true,
+        filterRenderer  : DateFilter,
+        formatter       : DateFormatter,
       },
       {
-        key: 'tags',
-        name: 'Tags',
-        width: 190,
-        editale: false,
-        resizable: true,
-        filterable:true,
+        key             : 'last_played',
+        name            : 'Last played',
+        width           : 180,
+        resizable       : true,
+        sortable        : true,
+        filterable      : true,
+        filterRenderer  : DateFilter,
+        formatter       : DateFormatter,
       },
       {
-        key: 'rating',
-        name: 'Rating',
-        width: 200,
-        editable: true,
-        resizable: true,
-        sortable: true,
-        filterable: true,
-        filterRenderer: NumericFilter,
-        formatter: RatingFormatter,
+        key             : 'tags',
+        name            : 'Tags',
+        width           : 190,
+        editale         : false,
+        resizable       : true,
+        filterable      :true,
+      },
+      {
+        key             : 'rating',
+        name            : 'Rating',
+        width           : 200,
+        editable        : true,
+        resizable       : true,
+        sortable        : true,
+        filterable      : true,
+        filterRenderer  : NumericFilter,
+        formatter       : RatingFormatter,
       }
 
       //TODO: column with Series this movie belongs to
@@ -171,6 +204,12 @@ const MovieGrid = React.createClass({
     this.sendVisibleList();
 
   },
+
+  getValidFilterValues(columnId) {
+      let values = this.state.rows.map(r => r[columnId]);
+      return values.filter((item, i, a) => { return i === a.indexOf(item); });
+  },
+
 
   handleGridSort(sortColumn, sortDirection) {
     const comparer = (a, b) => {
@@ -325,6 +364,10 @@ const MovieGrid = React.createClass({
     return(<input type="text" value={this.state.tagInput} key="taginput" onChange={this.tagInputChange}/>);
   },
 
+  renderItemCount(){
+    return(<span key="itemcount">{this.getSize()}</span>);
+  },
+
   tagInputChange(event){
       this.setState({tagInput: event.target.value});
   },
@@ -337,10 +380,19 @@ const MovieGrid = React.createClass({
           columns={this._columns}
           rowGetter={this.rowGetter}
           rowsCount={this.getSize()}
-          toolbar={<Toolbar enableFilter={true} children={[this.renderSendListButton(), this.renderRandomButton(), this.renderRescanButton(), this.renderRepairButton(), this.renderRefreshButton(),
-                                                           this.renderCompressButton(), this.renderTagButton(), this.renderTagInput()]} />}
+          toolbar={<Toolbar enableFilter={true}
+                            children={[this.renderItemCount(),
+                                       this.renderSendListButton(),
+                                       this.renderRandomButton(),
+                                       this.renderRescanButton(),
+                                       this.renderRepairButton(),
+                                       this.renderRefreshButton(),
+                                       this.renderCompressButton(),
+                                       this.renderTagButton(),
+                                       this.renderTagInput()]} />}
           onAddFilter={this.handleFilterChangeDelay}
           onClearFilters={this.onClearFilters}
+          getValidFilterValues={this.getValidFilterValues}
           emptyRowsView={EmptyRowsView}
           onRowClick={this.handleRowClick}
           minHeight={window.innerHeight - 250}
