@@ -184,7 +184,7 @@ const MovieGrid = React.createClass({
 
   onClearFilters() {
     // all filters removed
-    this.setState({filters: {} });
+    this.setState({filters: {}, rows: this.state.rows.slice() });
     setTimeout(this.sendVisibleList, 400);
   },
 
@@ -259,12 +259,12 @@ const MovieGrid = React.createClass({
               this.state.rows[i] = this.state.selectedModal;
           }
       }
+      this.setState({rows: this.state.rows.slice()});
   },
 
   handleSaveAndClose(){
       this.handleSave();
       this.handleCloseModal();
-      this.getMovies()
   },
 
   handleChange(event){
@@ -286,11 +286,11 @@ const MovieGrid = React.createClass({
       var index;
       for( let i=0; i< this.state.rows.length; i++ ){
           if(this.state.rows[i].id == this.state.selectedModal.id ){
-              index = i;
+              this.state.rows.splice(i, 1)
               break;
           }
       }
-      this.getMovies();
+      this.setState({rows: this.state.rows.slice()});
   },
 
   update_current_random(){
