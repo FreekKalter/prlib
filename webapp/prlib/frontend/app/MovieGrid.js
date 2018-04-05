@@ -161,6 +161,11 @@ const MovieGrid = React.createClass({
       fetch('/all_movies').then(function(response){
           response.json().then(function(data){
               this.setState({rows: data});
+              const cachedHits = localStorage.getItem('sort');
+              if (cachedHits) {
+                  const parsed = JSON.parse(cachedHits);
+                this.handleGridSort(parsed['sortColumn'], parsed['sortDirection']);
+              }
           }.bind(this));
       }.bind(this));
   },
@@ -212,8 +217,9 @@ const MovieGrid = React.createClass({
 
 
   handleGridSort(sortColumn, sortDirection) {
+    localStorage.setItem('sort', JSON.stringify({'sortColumn': sortColumn, 'sortDirection': sortDirection}));
     const comparer = (a, b) => {
-     if (sortDirection === 'ASC' || sortDirection ==='NONE') {
+     if (sortDirection === 'ASC'){ //|| sortDirection ==='NONE') {
        return (a[sortColumn] > b[sortColumn]) ? 1 : -1;
      } else if (sortDirection === 'DESC') {
        return (a[sortColumn] < b[sortColumn]) ? 1 : -1;
