@@ -15,6 +15,7 @@ const Button = require('react-bootstrap/lib/Button');
 const FileSizeFilter = require('./filters/FileSizeFilter.js');
 const DateFilter = require('./filters/DateFilter.js');
 import CompressedFilter from './filters/CompressedFilter.js';
+import VideoPlayer from './VideoPlayer.js';
 
 
 const EmptyRowsView = React.createClass({
@@ -45,6 +46,26 @@ class IdFormatter extends React.Component{
     }
 }
 
+class PlayFormatter extends React.Component{
+    constructor(props){
+        super(props);
+        this.clickHandler = this.clickHandler.bind(this);
+    }
+
+    clickHandler(){
+        var lao = this.props.location.lastIndexOf("/");
+        var root = this.props.location.substr(lao);
+        var filename = "video" + root + "/" + this.props.value;
+        this.props.playMovie(filename);
+        //fetch('/play/' + this.props.value).then(function(response){});
+    }
+
+    render(){
+      return(
+        <a href="#" onClick={this.clickHandler}>{this.props.value}</a>
+      );
+    }
+}
 class CompressedFormatter extends React.Component{
     constructor(props){
         super(props);
@@ -154,7 +175,7 @@ const MovieGrid = React.createClass({
       //TODO: column with Series this movie belongs to
     ];
     let rows = [];
-    return {rows: rows, filters: {}, selectedModal: {name: "testing", files: []}, showModal: false, modal_title: '', tagInput: ''};
+    return {rows: rows, filters: {}, selectedModal: {name: "testing", files: []}, showModal: false, showPlayer: false, modal_title: '', tagInput: ''};
   },
 
   getMovies(){
@@ -238,6 +259,20 @@ const MovieGrid = React.createClass({
           this.setState({selectedModal: row});
           this.props.onRowSelect(rowIdx, row, this.handleShowDetailsModal);
       }
+  },
+
+  playMovie(filename){
+    var base64 = btoa(filename);
+    var video_endpoint = 'video/' + base64;
+    //fetch('/video/' + base64).then(function(response){
+        //console.log('response: ', response);
+    //});
+    this.setState({showPlayer: true, filenamePlayer: video_endpoint});
+
+  },
+
+  handleClosePlayer(){
+      this.setState({showPlayer: false});
   },
 
   handleCloseModal(){
@@ -407,6 +442,20 @@ const MovieGrid = React.createClass({
 
           />
 
+        <Modal bsSize="large" animation={false} show={this.state.showPlayer} onHide={this.handleClosePlayer}>
+          <Modal.Header closeButton>
+            <Modal.Title>Player</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+             <div>
+                 <VideoPlayer autoplay={true} controls={true} width={800} sources={{src: this.state.filenamePlayer, type: 'video/mp4'}} />
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button onClick={this.handleClosePlayer}>Close</Button>
+          </Modal.Footer>
+        </Modal>
+
         <Modal bsSize="large" animation={false} show={this.state.showModal} onHide={this.handleCloseModal}>
           <Modal.Header closeButton>
             <Modal.Title>{this.state.modal_title}</Modal.Title>
@@ -455,7 +504,11 @@ const MovieGrid = React.createClass({
                 <div className="col-sm-6">
                     <ul className="modalFileList">
                         {this.state.selectedModal.files.map((item, index) => (
-                            <li key={index}>{item[0]}</li>
+                            <li key={index}>
+                                <PlayFormatter location={this.state.selectedModal.location}
+                                               value={item[0]}
+                                               playMovie={this.playMovie}/>
+                            </li>
                         ))}
                     </ul>
                 </div>
@@ -474,6 +527,7 @@ const MovieGrid = React.createClass({
                   <button type="button" onClick={this.handleSaveAndClose} className="btn btn-default">Save and close</button>
                   <button type="button" onClick={this.handleCompressOne} className="btn btn-primary">Compress</button>
                   <button type="button" onClick={this.handleDelete} className="btn btn-danger">Delete</button>
+
                 </div>
               </div>
             </form>

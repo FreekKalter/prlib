@@ -15,7 +15,7 @@
     "classnames": "^2.2.5",
     "filesize-parser": "^1.4.1",
     "immutability-helper": "^2.1.2",
-    "npm": "^5.8.0",
+    "npm": "^5.10.0",
     "nuka-carousel": "^2.0.4",
     "react": "^15.5.4",
     "react-bootstrap": "^0.31.0",
@@ -23,6 +23,7 @@
     "react-data-grid-addons": "^2.0.80",
     "react-dom": "^15.5.4",
     "react-select": "^1.2.1",
+    "video.js": "^7.0.5",
     "webpack": "^2.7.0"
   },
   "devDependencies": {

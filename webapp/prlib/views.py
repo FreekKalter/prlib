@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from flask import render_template, request
+from flask import render_template, request, send_from_directory
 from . import app, prlib, tasks
 from sqlalchemy.orm.exc import NoResultFound
 import json
 import os
 from datetime import datetime
 import subprocess
+import base64
 from pathlib import Path
 
 
@@ -200,3 +201,10 @@ def delete_last():
     p = prlib.prlib(prlib.Session())
     p.delete_movie(prlib.LAST_RANDOM)
     return 'ok'
+
+
+@app.route("/video/<moviefile_base64>")
+def video(moviefile_base64):
+    video_file = base64.b64decode(moviefile_base64).decode('utf-8')
+    print(video_file)
+    return send_from_directory('static', video_file)
